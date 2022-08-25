@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace BeatGraphs.Modules
@@ -405,7 +406,6 @@ namespace BeatGraphs.Modules
                     if (team.ScoreList[Builder.teams[i]] > 0)
                     {
                         // For each win the team has... temporarily store away the score for the win and pretend it doesn't exist
-                        // TODO: lamda?
                         var weightScore = team.ScoreList[Builder.teams[i]]; // ...temporarily store away the score for the win...
                         team.ScoreList[Builder.teams[i]] = 0; // ...and pretend it doesn't exist by setting the original score to 0.
 
@@ -595,20 +595,9 @@ namespace BeatGraphs.Modules
         /// </summary>
         private static int GetMaxIndex()
         {
-            int maxIndex = 0;
-            double maxScore = double.Parse(Builder.matrix[maxIndex].score);
-
-            // TODO: Can we do this through a lambda expression?.. should be able to eliminate maxScore even if not, especially if we change score to double
-            for (int i = 1; i < Builder.matrix.Count; i++)
-            {
-                if (double.Parse(Builder.matrix[i].score) > maxScore)
-                {
-                    maxIndex = i;
-                    maxScore = double.Parse(Builder.matrix[maxIndex].score);
-                }
-            }
-
-            return maxIndex;
+            return Builder.matrix.IndexOf(
+                Builder.matrix.Where(team => double.Parse(team.score) == 
+                    Builder.matrix.Max(t => double.Parse(t.score))).FirstOrDefault());
         }
     }
 }

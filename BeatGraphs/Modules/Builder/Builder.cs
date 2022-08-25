@@ -95,10 +95,7 @@ namespace BeatGraphs.Modules
             LoadScores(league, season, method, week);
             ResolveLoops(method);
             CalculateScores();
-
-            //TODO: See if Iterative and Weighted can be calculated now that NCAA isn't a thing anymore
-            if (method == Method.Standard)
-                FindLongestPaths();
+            FindLongestPaths();
         }
 
         /// <summary>
@@ -128,7 +125,6 @@ namespace BeatGraphs.Modules
             foreach (var game in Helpers.GetGames(league, season, week))
             {
                 // Weighted method keeps the actual game score, other methods, winners get 1 point, losers get 0.
-                // TODO: Check if this is necessary.. I don't think we're using this directly
                 if (method != Method.Weighted && game.weight != 0)
                 {
                     game.weight = 1;
@@ -220,34 +216,46 @@ namespace BeatGraphs.Modules
                 // Resolve loops as long as there are loops to resolve
                 while (beatLoops.Count > 0)
                 {
-                    if (method == Method.Iterative)
-                        ResolveIterative();
-                    else
-                        ResolveStandard(); // All other methods use the Standard method to resolve loops, the difference is the weights given to the links
+                    ResolveByMethod(method);
                 }
                 iLoopSize++; // Increase the loop size for the next pass
                 allPaths.Clear(); // Clear the list of paths
             }
         }
 
-        /// <summary>
-        /// The standard method of resolving loops means each path in the loop is reduced in weight equally until one path is at weight 0.
-        /// </summary>
-        private static void ResolveStandard()
+        private static void ResolveByMethod(Method method)
         {
-            int teamA;
-            int teamB;
-            double minPoints = FindMinPoints(); // Get the lowest weight for the set of paths in remaining loops.
+            int teamA, teamB;
+            double minWeight = method == Method.Iterative ? FindMinWeight() : FindMinPoints();
 
-            Logger.Log($"Found minimum points of {minPoints} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
+            Logger.Log($"Found minimum weight of {minWeight} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
             Logger.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
 
-            // Reduce all paths by the minimum weight
-            for (int i = 0; i < beatList.Count; i++)
+            if (method == Method.Iterative)
             {
-                teamA = teams.IndexOf(beatList[i].winner);
-                teamB = teams.IndexOf(beatList[i].loser);
-                matrix[teamA].ScoreList[teams[teamB]] = matrix[teamA].ScoreList[teams[teamB]] - minPoints;
+                // Reduce all paths by the minimum weight
+                for (int i = 0; i < beatLoops.Count; i++)
+                {
+                    for (int j = 0; j < beatLoops[i].Count() - 1; j++)
+                    {
+                        teamA = teams.IndexOf(beatLoops[i][j]);
+                        teamB = teams.IndexOf(beatLoops[i][j + 1]);
+                        matrix[teamA].ScoreList[teams[teamB]] = matrix[teamA].ScoreList[teams[teamB]] - minWeight;
+                        // Thanks to computer math, sometimes what should be 0 comes out as only near 0. Adjust to 0 if below this threshhold.
+                        if (matrix[teamA].ScoreList[teams[teamB]] < 0.00001)
+                            matrix[teamA].ScoreList[teams[teamB]] = 0;
+                    }
+                }
+            }
+            else
+            {
+                // Reduce all paths by the minimum weight
+                for (int i = 0; i < beatList.Count; i++)
+                {
+                    teamA = teams.IndexOf(beatList[i].winner);
+                    teamB = teams.IndexOf(beatList[i].loser);
+                    matrix[teamA].ScoreList[teams[teamB]] = matrix[teamA].ScoreList[teams[teamB]] - minWeight;
+                }
             }
 
             // Any paths that have their weights reduced to 0 have their BeatWin removed, breaking the loop.
@@ -266,61 +274,6 @@ namespace BeatGraphs.Modules
             for (int i = 0; i < beatLoops.Count; i++)
             {
                 for (int j = 0; j < (beatLoops[i].Count() - 1); j++)
-                {
-                    teamA = beatLoops[i][j];
-                    teamB = beatLoops[i][j + 1];
-                    if (!InBeatList(teamA, teamB))
-                    {
-                        Logger.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
-                        beatList.Add(new Game(teamA, teamB, matrix[teams.IndexOf(teamA)].ScoreList[teamB]));
-                    }
-                }
-            }
-        }
-
-        // TODO: See if ResolveIterative and ResolveStandard can be combined to reduce code duplication
-        /// <summary>
-        /// Resolving loops iteratively means that paths that occur more frequently in loops of the given size are broken first.
-        /// </summary>
-        private static void ResolveIterative()
-        {
-            int teamA;
-            int teamB;
-            double minWeight = FindMinWeight(); // Get the lowest weight for the set of paths in remaining loops.
-
-            Logger.Log($"Found minimum weight of {minWeight} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
-            Logger.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
-
-            // Reduce all paths by the minimum weight
-            for (int i = 0; i < beatLoops.Count; i++)
-            {
-                for (int j = 0; j < beatLoops[i].Count() - 1; j++)
-                {
-                    teamA = teams.IndexOf(beatLoops[i][j]);
-                    teamB = teams.IndexOf(beatLoops[i][j + 1]);
-                    matrix[teamA].ScoreList[teams[teamB]] = matrix[teamA].ScoreList[teams[teamB]] - minWeight;
-                    // Thanks to computer math, sometimes what should be 0 comes out as only near 0. Adjust to 0 if below this threshhold.
-                    if (matrix[teamA].ScoreList[teams[teamB]] < 0.00001)
-                        matrix[teamA].ScoreList[teams[teamB]] = 0;
-                }
-            }
-
-            // Any paths that have their weights reduced to 0 have their BeatWin removed, breaking the loop.
-            for (int i = 0; i < beatLoops.Count; i++)
-            {
-                if (LoopContainsZero(beatLoops[i]))
-                {
-                    Logger.Log(string.Join("->", beatLoops[i]), LogLevel.verbose);
-                    beatLoops.RemoveAt(i--);
-                }
-            }
-            Logger.Log($"Which leaves these ambiguous games on the BeatList:", LogLevel.verbose);
-            beatList.Clear();
-
-            // Reload the beatList with games still involved in loops.
-            for (int i = 0; i < beatLoops.Count; i++)
-            {
-                for (int j = 0; j < beatLoops[i].Count() - 1; j++)
                 {
                     teamA = beatLoops[i][j];
                     teamB = beatLoops[i][j + 1];
@@ -519,7 +472,7 @@ namespace BeatGraphs.Modules
 
         /// <summary>
         /// Similar to IsPathHelper except instead of simply returning true/false based on the results, it builds a set of the
-        /// paths that exists. The output is stored in allPaths and longestPaths.
+        /// paths that exists. The output is stored in allPaths.
         /// </summary>
         private static void FindPathHelper(int CurrentTeam, int EndTeam, int MaxPathSize)
         {
@@ -534,12 +487,6 @@ namespace BeatGraphs.Modules
                 // Add the end team to the path and log
                 currentPath.Add(EndTeam);
                 allPaths.Add(new List<int>(currentPath));
-
-                // If the path is longer than the current set of longest paths...
-                if (longestPath.Count > 0 && currentPath.Count > longestPath[0].Count)
-                    longestPath.Clear(); // ...clear the existing list.
-                if (longestPath.Count == 0 || currentPath.Count >= longestPath[0].Count)
-                    longestPath.Add(new List<int>(currentPath)); // Add the current path to the longest path set.
                 currentPath.RemoveAt(currentPath.LastIndexOf(EndTeam)); // Pop the path stack.
             }
 
