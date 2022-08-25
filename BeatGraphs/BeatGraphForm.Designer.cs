@@ -28,10 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BeatGraphForm));
             this.tbOutput = new System.Windows.Forms.RichTextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.menuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabBuilder = new System.Windows.Forms.TabPage();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.mlbBoxB = new System.Windows.Forms.CheckBox();
@@ -66,6 +69,7 @@
             this.cbAllYears = new System.Windows.Forms.CheckBox();
             this.butUpdate = new System.Windows.Forms.Button();
             this.cbUYears = new System.Windows.Forms.ComboBox();
+            this.systemTray = new System.Windows.Forms.NotifyIcon(this.components);
             this.menuStrip1.SuspendLayout();
             this.tabBuilder.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -90,19 +94,35 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.settingsToolStripMenuItem});
+            this.menuToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(626, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
+            // menuToolStripMenuItem
+            // 
+            this.menuToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settingsToolStripMenuItem,
+            this.exitToolStripMenuItem});
+            this.menuToolStripMenuItem.Name = "menuToolStripMenuItem";
+            this.menuToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
+            this.menuToolStripMenuItem.Text = "Menu";
+            // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // tabBuilder
             // 
@@ -395,7 +415,7 @@
             this.tabUpdater.Location = new System.Drawing.Point(4, 22);
             this.tabUpdater.Name = "tabUpdater";
             this.tabUpdater.Padding = new System.Windows.Forms.Padding(3);
-            this.tabUpdater.Size = new System.Drawing.Size(768, 159);
+            this.tabUpdater.Size = new System.Drawing.Size(596, 159);
             this.tabUpdater.TabIndex = 0;
             this.tabUpdater.Text = "Update Scores";
             this.tabUpdater.UseVisualStyleBackColor = true;
@@ -484,6 +504,12 @@
             this.cbUYears.Size = new System.Drawing.Size(59, 21);
             this.cbUYears.TabIndex = 4;
             // 
+            // systemTray
+            // 
+            this.systemTray.Icon = ((System.Drawing.Icon)(resources.GetObject("systemTray.Icon")));
+            this.systemTray.Text = "BeatGraphs";
+            this.systemTray.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systemTray_Click);
+            // 
             // BeatGraphForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -496,6 +522,8 @@
             this.Name = "BeatGraphForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BeatGraphs";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MinimizeOnClose);
+            this.Resize += new System.EventHandler(this.MinimizeForm);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.tabBuilder.ResumeLayout(false);
@@ -520,7 +548,7 @@
         #endregion
         private System.Windows.Forms.RichTextBox tbOutput;
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuToolStripMenuItem;
         private System.Windows.Forms.TabPage tabBuilder;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.CheckBox mlbBoxB;
@@ -555,6 +583,9 @@
         private System.Windows.Forms.CheckBox nbaBox;
         private System.Windows.Forms.CheckBox nflBox;
         private System.Windows.Forms.CheckBox nhlBox;
+        private System.Windows.Forms.NotifyIcon systemTray;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
     }
 }
 

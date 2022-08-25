@@ -229,6 +229,61 @@ namespace BeatGraphs
             }
         }
 
+        #region Form Minimization to System Tray
+        /// <summary>
+        /// Pops up settings form when menu item selected
+        /// </summary>
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var frm = new SettingsForm();
+            frm.Location = this.Location;
+            frm.StartPosition = FormStartPosition.Manual;
+            frm.Show();
+        }
+
+        /// <summary>
+        /// If the user hits the X in the top right to close the app, minimize it to the system tray instead.
+        /// </summary>
+        private void MinimizeOnClose(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                SendToTray();
+                e.Cancel = true;
+            }
+        }
+
+        /// <summary>
+        /// When the user minimizes the form, send it to the system tray.
+        /// </summary>
+        public void MinimizeForm(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                SendToTray();
+            }
+        }
+
+        /// <summary>
+        /// Send the application to the system tray
+        /// </summary>
+        private void SendToTray()
+        {
+            Hide();
+            systemTray.Visible = true;
+        }
+
+        /// <summary>
+        /// When the user double clicks on the item on the system tray, restore to normal
+        /// </summary>
+        public void systemTray_Click(object sender, MouseEventArgs e)
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            systemTray.Visible = false;
+        }
+        #endregion
+
         #region Builder Checkboxes
         /// <summary>
         /// Track status of Standard Method build request
@@ -317,14 +372,11 @@ namespace BeatGraphs
         #endregion
 
         /// <summary>
-        /// Pops up settings form when menu item selected
+        /// Since using X to close the app only minimizes it, users must use this to actually quit the program.
         /// </summary>
-        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var frm = new SettingsForm();
-            frm.Location = this.Location;
-            frm.StartPosition = FormStartPosition.Manual;
-            frm.Show();
+            Application.Exit();
         }
     }
 }
