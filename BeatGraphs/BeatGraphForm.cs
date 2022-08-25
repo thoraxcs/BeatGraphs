@@ -22,7 +22,7 @@ namespace BeatGraphs
         {
             InitializeComponent();
             PopulateYears();
-            RichTextBoxExtensions.verbose = false;
+            Settings.LoadSettings();
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace BeatGraphs
         /// </summary>
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var frm = new Settings();
+            var frm = new SettingsForm();
             frm.Location = this.Location;
             frm.StartPosition = FormStartPosition.Manual;
             frm.Show();

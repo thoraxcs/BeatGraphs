@@ -1,46 +1,63 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace BeatGraphs
 {
-    /// <summary>
-    /// Form for keeping track of user settings.
-    /// </summary>
-    public partial class Settings : Form
+    public static class Settings
     {
+        private static Dictionary<string, bool> settings; 
+        static readonly string settingsPath = Process.GetCurrentProcess().MainModule.FileName.Substring(0, Process.GetCurrentProcess().MainModule.FileName.LastIndexOf(@"\"));
+        static readonly string settingsFileName = "bg.config";
+
         /// <summary>
-        /// Set initial states to defaults from respective areas
+        /// Triggered at application load, gets settings from a file
         /// </summary>
-        public Settings()
+        public static void LoadSettings()
         {
-            InitializeComponent();
-            setVerbose.Checked = RichTextBoxExtensions.verbose;
-            setUpload.Checked = Modules.Writer.ftpEnabled;
+            try
+            {
+                // Read settings from file and apply them
+                string settingsText = Helpers.ReadFile($@"{settingsPath}\{settingsFileName}");
+                settings = JsonConvert.DeserializeObject<Dictionary<string, bool>>(settingsText);
+            }
+            catch
+            {
+                // If the file read fails, it didn't exist. Create the object with defaults
+                settings = new Dictionary<string, bool>();
+                settings.Add("verbose", false);
+                settings.Add("upload", false);
+
+                // Save the defaults to file so going forward this isn't necessary
+                var settingsText = JsonConvert.SerializeObject(settings);
+                Helpers.WriteFile($@"{settingsPath}\{settingsFileName}", settingsText);
+            }
         }
 
         /// <summary>
-        /// Update settings
+        /// Triggered when the user saves through the settings form. Save settings to file.
         /// </summary>
-        private void butSave_Click(object sender, EventArgs e)
+        public static void SaveSettings(bool verbose, bool upload)
         {
-            RichTextBoxExtensions.verbose = setVerbose.Checked;
-            Modules.Writer.ftpEnabled = setUpload.Checked;
-            Close();
+            // Update the settings object to be used throughout the app
+            settings["verbose"] = verbose;
+            settings["upload"] = upload;
+
+            // Save the settings options to file
+            var settingsText = JsonConvert.SerializeObject(settings);
+            Helpers.WriteFile($@"{settingsPath}\{settingsFileName}", settingsText);
         }
 
         /// <summary>
-        /// Ignore changes
+        /// Accessor to retrive a key setting
         /// </summary>
-        private void butCancel_Click(object sender, EventArgs e)
+        public static bool Get(string key)
         {
-            Close();
+            if (!settings.ContainsKey(key))
+                throw new Exception($"No setting '{key}' found.");
+
+            return settings[key];
         }
     }
 }

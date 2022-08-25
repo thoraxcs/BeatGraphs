@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -17,6 +18,24 @@ namespace BeatGraphs
         private static readonly string ftpUser = ConfigurationManager.AppSettings.Get("ftpUser");
         private static readonly string ftpPass = ConfigurationManager.AppSettings.Get("ftpPass");
 
+        #region File
+        public static void WriteFile(string file, string text)
+        {
+            File.WriteAllText(file, text);
+        }
+
+        public static string ReadFile(string file)
+        {
+            if (!File.Exists(file))
+            {
+                throw new Exception($"File {file} does not exist to be read.");
+            }
+
+            return File.ReadAllText(file);
+        }
+        #endregion
+
+        #region SQL
         /// <summary>
         /// Gets the ID for the season represented by the given league and year
         /// </summary>
@@ -222,7 +241,9 @@ namespace BeatGraphs
 
             return sImage + ".png";
         }
+        #endregion
 
+        #region FTP
         /// <summary>
         /// Creates an FTP file directory at the given location if it doesn't yet exist
         /// </summary>
@@ -255,5 +276,6 @@ namespace BeatGraphs
             FtpWebResponse response = (FtpWebResponse)request.GetResponse();
             response.Close();
         }
+        #endregion
     }
 }

@@ -19,8 +19,8 @@ namespace BeatGraphs.Modules
     public static class Writer
     {
         public static BeatGraphForm form;   // Used for logging to the form's progress textbox
-        public static bool ftpEnabled = false; // User setting for whether or not to immediately FTP results to web
 
+        // TODO: Move actual file writing code to helper
         static readonly string filePath = ConfigurationManager.AppSettings.Get("filePath"); // The base file path on the computer/server
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace BeatGraphs.Modules
             pGraphVis.WaitForExit();
 
             // Upload files to BeatGraphs.com
-            if (ftpEnabled)
+            if (Settings.Get("upload"))
                 FtpFiles(league, season, method, week);
         }
 
