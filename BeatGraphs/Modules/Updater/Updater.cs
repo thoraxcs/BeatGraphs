@@ -480,6 +480,7 @@ namespace BeatGraphs.Modules
 
                         // Record the game and add it to the playoff tracker
                         var round = int.Parse(week);
+                        form.Log($"Recording Week {week} game {awayTeam} ({awayScore}) - {homeTeam} ({homeScore})", LogLevel.verbose);
                         InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
                         if (round >= 500)
                             matchups.Add(awayID, homeID, round);
@@ -509,6 +510,7 @@ namespace BeatGraphs.Modules
                         // NFL sometimes orders the data by winner instead of home/away
                         var homeMark = ParseLine(attributes[4].InnerHtml);
                         var round = int.Parse(week);
+                        form.Log($"Recording Week {week} game {winTeam} ({winScore}) - {loseTeam} ({loseScore})", LogLevel.verbose);
                         if (homeMark == "@")
                         {   // Visitor wins
                             InsertGame(seasonID, int.Parse(week), winID, winScore, loseID, loseScore);
@@ -843,21 +845,12 @@ namespace BeatGraphs.Modules
         private static string ParseLine(object line)
         {
             string text = (string)line;
-            if (text == "")
+            if (!text.Contains("<")) // If the line doesn't contain an html tag (empty line or otherwise) return as is
                 return text;
 
-            // Remove all tags
-            // TODO: Replace with regex? ">([^<>]+?)<" or even better ">((?!\s)[^<>]+?)<"
-            if (text.Contains("<a"))
-                text = text.Substring(text.IndexOf("<a"));
-            if (text.Contains("<strong>"))
-                text = text.Substring(text.IndexOf("<strong>") + 7);
-            if (text.Contains("<"))
-            {
-                text = text.Substring(text.IndexOf(">") + 1);
-                text = text.Substring(0, text.IndexOf("<"));
-            }
-            return text;
+            // Getting here means there's an html tag (on the assumption the < above indicates a tag. Remove all tags and give me the inside.
+            var regex = new Regex(@">((?!\s)[^<>]+?)<");
+            return regex.Match(text).Groups[1].Value; 
         }
     }
 }

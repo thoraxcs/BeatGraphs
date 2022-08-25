@@ -506,28 +506,22 @@ namespace BeatGraphs.Modules
                 // The current team doesn't have a win over the end team, add it to the current path we're checking
                 currentPath.Add(CurrentTeam);
 
-                // TODO: Can this be cleaned into fewer blocks?
                 // Then iterate through teams that the current team has defeated.
                 for (int i = 0; i < matrix[iCurrentIndex].ScoreList.Count; i++)
                 {
                     // As long as we're not exceeding the maximum length and the defeated team hasn't already been checked...
-                    if ((currentPath.Count() < maxLength) && !failedLoopTeams.Contains(teams[i]))
-                    {
-                        // ...and the current path doesn't already contain the defeated team...
-                        if (!currentPath.Contains(teams[i]) && (matrix[iCurrentIndex].ScoreList[teams[i]] > 0))
-                        {
-                            // ...make the defeated team the current team for the next recursion level.
-                            if (IsPathHelper(OriginTeam, teams[i], EndTeam, maxLength))
+                    // ...and the current path doesn't already contain the defeated team...
+                    // ...make the defeated team the current team for the next recursion level.
+                    if ((currentPath.Count() < maxLength) && !failedLoopTeams.Contains(teams[i])
+                        && !currentPath.Contains(teams[i]) && (matrix[iCurrentIndex].ScoreList[teams[i]] > 0)
+                        && IsPathHelper(OriginTeam, teams[i], EndTeam, maxLength))
                                 return true;
-                        }
-                    }
                 }
-
-                // TODO: Can these be moved to be with the return false below?
-                // If we get here, no valid path from the current team to the end team exists, mark it and remove from the current path.
-                failedLoopTeams.Add(CurrentTeam);
-                currentPath.Remove(CurrentTeam);
             }
+
+            // If we get here, no valid path from the current team to the end team exists, mark it and remove from the current path.
+            failedLoopTeams.Add(CurrentTeam);
+            currentPath.Remove(CurrentTeam);
             return false;
         }
 
@@ -598,17 +592,8 @@ namespace BeatGraphs.Modules
 
             // Find the winPoints and lossPoints for each team
             CountPaths();
-
-            // TODO: Does winPoints.Max(w => w); work instead?
-            maxScore = winPoints[0]; 
-            minScore = lossPoints[0];
-            for (int i = 0; i < winPoints.Count; i++)
-            {
-                if (winPoints[i] > maxScore)
-                    maxScore = winPoints[i];
-                if (lossPoints[i] > minScore)
-                    minScore = lossPoints[i];
-            }
+            maxScore = winPoints.Max(w => w);
+            minScore = lossPoints.Max(l => l);
 
             // The scale for scores will be based on the difference between the max score and min score. Since minScore is 
             // a positive number now but is considered negative, it is added to know the total size of the range.
@@ -740,12 +725,7 @@ namespace BeatGraphs.Modules
             // Starting from the current team
             currentPath.Add(CurrentTeam);
             // If there are no paths yet or the current path is equal to the longest, add the current path to the set.
-            // TODO: Should be able to combine the first two cases which do the same thing due to short-circuit magic.
-            if (longestPath.Count == 0)
-            {
-                longestPath.Add(new List<int>(currentPath));
-            }
-            else if (longestPath[0].Count == currentPath.Count)
+            if (longestPath.Count == 0 || longestPath[0].Count == currentPath.Count)
             {
                 longestPath.Add(new List<int>(currentPath));
             }
