@@ -1,15 +1,9 @@
 ﻿using AngleSharp;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace BeatGraphs.Modules
 {
@@ -20,18 +14,13 @@ namespace BeatGraphs.Modules
     {
         private static readonly int MIDYEARCUTOFF = 225; // 225 is an arbitary number chosen to represent the a split during the offseason
 
-        public static BeatGraphForm form; // This is used to allow logging to the output window
-
         /// <summary>
         /// Entry point to the updater
         /// </summary>
         /// <param name="leagues">The set of leagues to be included in the update.</param>
         /// <param name="season">The season to be included in the update, multiple seasons are handled at the calling level.</param>
-        /// <param name="bgForm">The form, included to allow logging.</param>
-        public static void Run(List<string> leagues, string season, BeatGraphForm bgForm)
+        public static void Run(List<string> leagues, string season)
         {
-            form = bgForm;
-
             // Trigger the appropriate league parsers
             if (leagues.Contains("MLB"))
                 loadMLB("MLB", season);
@@ -50,19 +39,19 @@ namespace BeatGraphs.Modules
         {
             try
             {
-                form.Log($"Updating scores for the {season} {league} season.");
+                Logger.Log($"Updating scores for the {season} {league} season.");
 
                 string sHTML = "", sHTMLP = "";
                 int seasonStart = -1;
 
                 // Get the ID for the season and clear all existing scores for it from the database
                 var seasonID = Helpers.FindSeason(int.Parse(season), league);
-                ClearSeason(seasonID);
+                Helpers.ClearSeason(seasonID);
 
                 // Get the raw HTML for the scrape
                 try
                 {
-                    sHTML = GetHtml("https://www.baseball-reference.com/leagues/majors/" + season + "-schedule.shtml");
+                    sHTML = Helpers.GetHtml("https://www.baseball-reference.com/leagues/majors/" + season + "-schedule.shtml");
                 }
                 catch { return; }
 
@@ -131,7 +120,7 @@ namespace BeatGraphs.Modules
                         // There's a problem if the teams couldn't be identified
                         if (awayID == -1 || homeID == -1)
                         {
-                            form.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                            Logger.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                             return;
                         }
 
@@ -141,11 +130,11 @@ namespace BeatGraphs.Modules
                         if (seasonStart == -1)
                             seasonStart = dayOfYear;
 
-                        InsertGame(seasonID, ((dayOfYear - seasonStart) / 7) + 1, awayID, awayScore, homeID, homeScore);
+                        Helpers.InsertGame(seasonID, ((dayOfYear - seasonStart) / 7) + 1, awayID, awayScore, homeID, homeScore);
                     }
                     catch
                     {
-                        form.Log($"Failure in MLB regular season. Last success: {gameDate}, {awayTeam} - {homeTeam}");
+                        Logger.Log($"Failure in MLB regular season. Last success: {gameDate}, {awayTeam} - {homeTeam}");
                         throw;
                     }
                 }
@@ -201,7 +190,7 @@ namespace BeatGraphs.Modules
                         // There's a problem if the teams couldn't be identified
                         if (awayID == -1 || homeID == -1)
                         {
-                            form.Log($"Could not identify teams for playoff game for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                            Logger.Log($"Could not identify teams for playoff game for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                             return;
                         }
 
@@ -209,23 +198,23 @@ namespace BeatGraphs.Modules
                         matchups.Add(awayID, homeID);
                         round = matchups.GetRound(awayID, homeID);
 
-                        InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
+                        Helpers.InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
                         lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
                     }
                     catch
                     {
-                        form.Log($"Failure in MLB post season. Last success: {round}, {awayTeam} - {homeTeam}");
+                        Logger.Log($"Failure in MLB post season. Last success: {round}, {awayTeam} - {homeTeam}");
                         throw;
                     }
                 }
 
                 // Send to the database a recap of the playoff matchups.
                 RecordPlayoffs(seasonID, matchups, lastWin);
-                form.Log($"{league} {season} has been updated successfully.");
+                Logger.Log($"{league} {season} has been updated successfully.");
             }
             catch (Exception ex)
             {
-                form.Log(ex.Message, LogLevel.error);
+                Logger.Log(ex.Message, LogLevel.error);
             }
         }
 
@@ -236,21 +225,21 @@ namespace BeatGraphs.Modules
         {
             try
             {
-                form.Log($"Updating scores for the {season} {league} season.");
+                Logger.Log($"Updating scores for the {season} {league} season.");
 
                 string sHTML = "", sHTMLP = "";
                 int seasonStart = -1;
 
                 // Get the ID for the season and clear all existing scores for it from the database
                 var seasonID = Helpers.FindSeason(int.Parse(season), league);
-                ClearSeason(seasonID);
+                Helpers.ClearSeason(seasonID);
 
                 #region Playoff Info
                 // For some stupid reason Basketball-Reference doesn't delineate playoffs so we have to find out on our own.
                 // TODO: Is the lack of a playoffs page going to be a problem during the regular season?
                 try
                 {
-                    sHTMLP = GetHtml("http://www.basketball-reference.com/playoffs/NBA_" + (int.Parse(season) + 1) + ".html", false);
+                    sHTMLP = Helpers.GetHtml("http://www.basketball-reference.com/playoffs/NBA_" + (int.Parse(season) + 1) + ".html", false);
                 }
                 catch { return; }
 
@@ -296,7 +285,7 @@ namespace BeatGraphs.Modules
                             // There's a problem if the teams couldn't be identified
                             if (awayID == -1 || homeID == -1)
                             {
-                                form.Log($"Could not identify teams for playoff game for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                                Logger.Log($"Could not identify teams for playoff game for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                                 return;
                             }
 
@@ -318,7 +307,7 @@ namespace BeatGraphs.Modules
                 // Get the base page for the season which will be parsed for months where games where played
                 try
                 {
-                    sHTML = GetHtml("http://www.basketball-reference.com/leagues/NBA_" + (int.Parse(season) + 1) + "_games.html");
+                    sHTML = Helpers.GetHtml("http://www.basketball-reference.com/leagues/NBA_" + (int.Parse(season) + 1) + "_games.html");
                 }
                 catch { return; }
 
@@ -334,7 +323,7 @@ namespace BeatGraphs.Modules
                     // Get the raw HTML for the scrape
                     try
                     {
-                        sHTML = GetHtml(url);
+                        sHTML = Helpers.GetHtml(url);
                     }
                     catch { return; }
 
@@ -367,7 +356,7 @@ namespace BeatGraphs.Modules
                         // There's a problem if the teams couldn't be identified
                         if (awayID == -1 || homeID == -1)
                         {
-                            form.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                            Logger.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                             return;
                         }
 
@@ -392,18 +381,18 @@ namespace BeatGraphs.Modules
                         if (dtGame >= playoffStart)
                             weekOfYear = playoffs.GetRound(awayID, homeID);
 
-                        InsertGame(seasonID, weekOfYear, awayID, awayScore, homeID, homeScore);
+                        Helpers.InsertGame(seasonID, weekOfYear, awayID, awayScore, homeID, homeScore);
                         lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
                     }
                 }
 
                 // Send to the database a recap of the playoff matchups.
                 RecordPlayoffs(seasonID, playoffs, lastWin);
-                form.Log($"{league} {season} has been updated successfully.");
+                Logger.Log($"{league} {season} has been updated successfully.");
             }
             catch (Exception ex)
             {
-                form.Log(ex.Message, LogLevel.error);
+                Logger.Log(ex.Message, LogLevel.error);
             }
         }
 
@@ -414,18 +403,18 @@ namespace BeatGraphs.Modules
         {
             try
             {
-                form.Log($"Updating scores for the {season} {league} season.");
+                Logger.Log($"Updating scores for the {season} {league} season.");
 
                 string sHTML = "";
 
                 // Get the ID for the season and clear all existing scores for it from the database
                 var seasonID = Helpers.FindSeason(int.Parse(season), league);
-                ClearSeason(seasonID);
+                Helpers.ClearSeason(seasonID);
 
                 // Get the raw HTML for the scrape
                 try
                 {
-                    sHTML = GetHtml("http://www.pro-football-reference.com/years/" + season + "/games.htm");
+                    sHTML = Helpers.GetHtml("http://www.pro-football-reference.com/years/" + season + "/games.htm");
                 }
                 catch { return; }
 
@@ -474,14 +463,14 @@ namespace BeatGraphs.Modules
                         // There's a problem if the teams couldn't be identified
                         if (awayID == -1 || homeID == -1)
                         {
-                            form.Log($"Could not identify teams in week {week} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                            Logger.Log($"Could not identify teams in week {week} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                             return;
                         }
 
                         // Record the game and add it to the playoff tracker
                         var round = int.Parse(week);
-                        form.Log($"Recording Week {week} game {awayTeam} ({awayScore}) - {homeTeam} ({homeScore})", LogLevel.verbose);
-                        InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
+                        Logger.Log($"Recording Week {week} game {awayTeam} ({awayScore}) - {homeTeam} ({homeScore})", LogLevel.verbose);
+                        Helpers.InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
                         if (round >= 500)
                             matchups.Add(awayID, homeID, round);
                         lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
@@ -503,23 +492,23 @@ namespace BeatGraphs.Modules
                         // There's a problem if the teams couldn't be identified
                         if (winID == -1 || loseID == -1)
                         {
-                            form.Log($"Could not identify teams for week {week} game between ({winTeam}) and ({loseTeam}).", LogLevel.error);
+                            Logger.Log($"Could not identify teams for week {week} game between ({winTeam}) and ({loseTeam}).", LogLevel.error);
                             return;
                         }
 
                         // NFL sometimes orders the data by winner instead of home/away
                         var homeMark = ParseLine(attributes[4].InnerHtml);
                         var round = int.Parse(week);
-                        form.Log($"Recording Week {week} game {winTeam} ({winScore}) - {loseTeam} ({loseScore})", LogLevel.verbose);
+                        Logger.Log($"Recording Week {week} game {winTeam} ({winScore}) - {loseTeam} ({loseScore})", LogLevel.verbose);
                         if (homeMark == "@")
                         {   // Visitor wins
-                            InsertGame(seasonID, int.Parse(week), winID, winScore, loseID, loseScore);
+                            Helpers.InsertGame(seasonID, int.Parse(week), winID, winScore, loseID, loseScore);
                             if (round >= 500)
                                 matchups.Add(winID, loseID, round);
                         }
                         else
                         {   // Home team wins
-                            InsertGame(seasonID, int.Parse(week), loseID, loseScore, winID, winScore);
+                            Helpers.InsertGame(seasonID, int.Parse(week), loseID, loseScore, winID, winScore);
                             if (round >= 500)
                                 matchups.Add(loseID, winID, round);
                         }
@@ -529,11 +518,11 @@ namespace BeatGraphs.Modules
 
                 // Send to the database a recap of the playoff matchups.
                 RecordPlayoffs(seasonID, matchups, lastWin);
-                form.Log($"{league} {season} has been updated successfully.");
+                Logger.Log($"{league} {season} has been updated successfully.");
             }
             catch (Exception ex)
             {
-                form.Log(ex.Message, LogLevel.error);
+                Logger.Log(ex.Message, LogLevel.error);
             }
         }
 
@@ -544,25 +533,25 @@ namespace BeatGraphs.Modules
         {
             try
             {
-                form.Log($"Updating scores for the {season} {league} season.");
+                Logger.Log($"Updating scores for the {season} {league} season.");
 
                 string sHTML = "";
                 int seasonStart = -1;
 
                 if (season == "2004")
                 {
-                    form.Log("The 2004-05 NHL season was cancelled.", LogLevel.warning);
+                    Logger.Log("The 2004-05 NHL season was cancelled.", LogLevel.warning);
                     return;
                 }
 
                 // Get the ID for the season and clear all existing scores for it from the database
                 var seasonID = Helpers.FindSeason(int.Parse(season), league);
-                ClearSeason(seasonID);
+                Helpers.ClearSeason(seasonID);
 
                 // Get the raw HTML for the scrape
                 try
                 {
-                    sHTML = GetHtml("http://www.hockey-reference.com/leagues/NHL_" + (int.Parse(season) + 1) + "_games.html");
+                    sHTML = Helpers.GetHtml("http://www.hockey-reference.com/leagues/NHL_" + (int.Parse(season) + 1) + "_games.html");
                 }
                 catch { return; }
 
@@ -591,7 +580,7 @@ namespace BeatGraphs.Modules
                     // There's a problem if the teams couldn't be identified
                     if (awayID == -1 || homeID == -1)
                     {
-                        form.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
+                        Logger.Log($"Could not identify teams for game on {gameDate} for ({awayTeam}) @ ({homeTeam}).", LogLevel.error);
                         return;
                     }
 
@@ -608,7 +597,7 @@ namespace BeatGraphs.Modules
                     if (seasonStart == -1)
                         seasonStart = dayOfYear;
 
-                    InsertGame(seasonID, ((dayOfYear - seasonStart) / 7) + 1, awayID, awayScore, homeID, homeScore);
+                    Helpers.InsertGame(seasonID, ((dayOfYear - seasonStart) / 7) + 1, awayID, awayScore, homeID, homeScore);
                 }
 
                 // Playoffs
@@ -676,7 +665,7 @@ namespace BeatGraphs.Modules
                     // There's a problem if the teams couldn't be identified
                     if (awayID == -1 || homeID == -1)
                     {
-                        form.Log($"Could not identify teams in playoff game for ({awayTeam}) vs ({homeTeam}).", LogLevel.error);
+                        Logger.Log($"Could not identify teams in playoff game for ({awayTeam}) vs ({homeTeam}).", LogLevel.error);
                         return;
                     }
 
@@ -694,17 +683,17 @@ namespace BeatGraphs.Modules
                         round = matchups.GetRound(awayID, homeID);
                     }
 
-                    InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
+                    Helpers.InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
                     lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
                 }
 
                 // Send to the database a recap of the playoff matchups.
                 RecordPlayoffs(seasonID, matchups, lastWin);
-                form.Log($"{league} {season} has been updated successfully.");
+                Logger.Log($"{league} {season} has been updated successfully.");
             }
             catch (Exception ex)
             {
-                form.Log(ex.Message, LogLevel.error);
+                Logger.Log(ex.Message, LogLevel.error);
             }
         }
 
@@ -742,21 +731,8 @@ namespace BeatGraphs.Modules
             if (!matchup.HasValue)
                 return;
 
-            // TODO: move this to a helper function. DB calls should only happen there.
-            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
-            SqlParameter[] sqlParam = new SqlParameter[5];
-
-            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
-            sqlParam[1] = SQLDBA.CreateParameter("@Range", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Value.Value);
-            sqlParam[2] = SQLDBA.CreateParameter("@WinnerID", SqlDbType.Int, 64, ParameterDirection.Input, winnerID);
-            sqlParam[3] = SQLDBA.CreateParameter("@AwayID", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Value.Key.Item1);
-            sqlParam[4] = SQLDBA.CreateParameter("@HomeID", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Value.Key.Item2);
-
-            SQLDBA.Open();
-            SQLDBA.ExecuteSqlSP("Insert_Playoff", sqlParam);
-
-            SQLDBA.Close();
-            SQLDBA.Dispose();
+            // Add the matchup to the database
+            Helpers.InsertPlayoffs(seasonID, matchup.Value, winnerID);
 
             // Remove the current matchup from the set and try the next lower round for each team involved.
             matchups.Remove(matchup.Value.Key.Item1, matchup.Value.Key.Item2);
@@ -764,80 +740,8 @@ namespace BeatGraphs.Modules
             RecordPlayoffsHelper(seasonID, matchups, matchup.Value.Key.Item2, matchup.Value.Value - 1);
         }
 
-        /// <summary>
-        /// Clear all games for the season.
-        /// </summary>
-        // TODO: Move this function to the helper class.
-        private static void ClearSeason(int seasonID)
-        {
-            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
-            SqlParameter[] sqlParam = new SqlParameter[1];
 
-            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
 
-            SQLDBA.Open();
-            SQLDBA.ExecuteSqlSP("Clear_Season", sqlParam);
-
-            SQLDBA.Close();
-            SQLDBA.Dispose();
-        }
-
-        /// <summary>
-        /// Read the HTML from a given URL. ErrorThrow allows the designation of how serious failure to find the page is.
-        /// </summary>
-        // TODO: Consider moving this to helper class as well since it's external things like FTP and DB.
-        private static string GetHtml(string url, bool errorThrow = true)
-        {
-            string html = "";
-
-            try
-            {
-                HttpWebRequest hwRequest = (HttpWebRequest)WebRequest.Create(url);
-                using (HttpWebResponse hwResponse = (HttpWebResponse)hwRequest.GetResponse())
-                {
-                    using (StreamReader srReader = new StreamReader(hwResponse.GetResponseStream()))
-                    {
-                        html = srReader.ReadToEnd();
-                    }
-                }
-            }
-            catch
-            {
-                if (errorThrow)
-                {
-                    form.Log($"Requested page could not be accessed and may not yet exist: {url}", LogLevel.error);
-                    throw;
-                }
-                else
-                {
-                    form.Log($"Requested page could not be accessed and may not yet exist: {url}", LogLevel.warning);
-                }
-            }
-            return html;
-        }
-
-        /// <summary>
-        /// Insert game data into the database
-        /// </summary>
-        // TODO: Move this function to the helper class.
-        private static void InsertGame(int seasonID, int week, int awayID, int awayScore, int homeID, int homeScore)
-        {
-            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
-            SqlParameter[] sqlParam = new SqlParameter[6];
-
-            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
-            sqlParam[1] = SQLDBA.CreateParameter("@WeekID", SqlDbType.Int, 64, ParameterDirection.Input, week);
-            sqlParam[2] = SQLDBA.CreateParameter("@AwayID", SqlDbType.Int, 64, ParameterDirection.Input, awayID);
-            sqlParam[3] = SQLDBA.CreateParameter("@AwayScore", SqlDbType.Int, 64, ParameterDirection.Input, awayScore);
-            sqlParam[4] = SQLDBA.CreateParameter("@HomeID", SqlDbType.Int, 64, ParameterDirection.Input, homeID);
-            sqlParam[5] = SQLDBA.CreateParameter("@HomeScore", SqlDbType.Int, 64, ParameterDirection.Input, homeScore);
-
-            SQLDBA.Open();
-            SQLDBA.ExecuteSqlSP("Insert_Game", sqlParam);
-
-            SQLDBA.Close();
-            SQLDBA.Dispose();
-        }
 
         /// <summary>
         /// Removes ancillary text from a data entry to get to the wanted information.

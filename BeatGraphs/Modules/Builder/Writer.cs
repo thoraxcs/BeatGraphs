@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BeatGraphs.Modules
 {
@@ -18,11 +13,6 @@ namespace BeatGraphs.Modules
     /// </summary>
     public static class Writer
     {
-        public static BeatGraphForm form;   // Used for logging to the form's progress textbox
-
-        // TODO: Move actual file writing code to helper
-        static readonly string filePath = ConfigurationManager.AppSettings.Get("filePath"); // The base file path on the computer/server
-
         /// <summary>
         /// Entry point for the Writer class. Creates physical directory structure if necessary and calls components to do the work.
         /// </summary>
@@ -30,37 +20,18 @@ namespace BeatGraphs.Modules
         /// <param name="season">Which season will be processed in the run</param>
         /// <param name="method">Which method will be processed in the run</param>
         /// <param name="week">Which week will be processed in the run</param>
-        /// <param name="bgForm">The main form for logging purposes</param>
-        public static void ProcessFiles(string league, string season, Method method, string week, BeatGraphForm bgForm)
+        public static void ProcessFiles(string league, string season, Method method, string week)
         {
-            form = bgForm;
-
             // Creates necessary directory structure if it doesn't yet exist.
-            if (!Directory.Exists($"{filePath}\\{league}"))
-                Directory.CreateDirectory($"{filePath}\\{league}");
-            if (!Directory.Exists($"{filePath}\\{league}\\{method.ToString()[0]}"))
-                Directory.CreateDirectory($"{filePath}\\{league}\\{method.ToString()[0]}");
-            if (!Directory.Exists($"{filePath}\\{league}\\{method.ToString()[0]}\\{season}"))
-                Directory.CreateDirectory($"{filePath}\\{league}\\{method.ToString()[0]}\\{season}");
-
-            // Set up commands for GraphViz
-            string imageFile = $"{filePath}\\{league}\\{method.ToString()[0]}\\{season}\\{week}.png";
-            string command = string.Concat(new object[] { "-Tpng -o\"", imageFile, "\" -Kdot \"", $"{filePath}GraphOut.txt\"" });
+            Helpers.InitializeDirectory(league, method.ToString().Substring(0, 1), season);
 
             // Execute steps to build required files
             PrintWebContent(league, season, method, week);
             PrintGraphFile(league, season, method);
 
-            // Execute GraphViz based on graph file results
-            // TODO: Move this to a function of its own? Probably in the Helper class since it's external
-            Process pGraphVis = new Process();
-            pGraphVis.StartInfo.FileName = @"D:\Graphviz\bin\dot.exe";
-            pGraphVis.StartInfo.Arguments = command;
-            pGraphVis.StartInfo.RedirectStandardOutput = true;
-            pGraphVis.StartInfo.UseShellExecute = false;
-            pGraphVis.StartInfo.CreateNoWindow = true;
-            pGraphVis.Start();
-            pGraphVis.WaitForExit();
+            // Set up commands for GraphViz and generate the graph
+            string imgPath = $"\\{league}\\{method.ToString()[0]}\\{season}\\{week}.png";
+            Helpers.GenerateGraph(imgPath);
 
             // Upload files to BeatGraphs.com
             if (Settings.Get("upload"))
@@ -74,7 +45,6 @@ namespace BeatGraphs.Modules
         {
             StringBuilder sbOut = new StringBuilder();
             StringBuilder sbTop5 = new StringBuilder();
-            TextWriter twOut = new StreamWriter($"{filePath}/{league}/{method.ToString()[0]}/{season}/{week}.php", false);
 
             //Output Longest Paths
             sbOut.Append("<p><br><b>The longest BeatPaths this week are:</b><br>\n");
@@ -172,12 +142,7 @@ namespace BeatGraphs.Modules
 
             sbTop5.Append("<div class='top5'>\n");
             sbTop5.Append($@"<a href=""graphs.php?league={league}&method={method}""><div class='top5header'>{method.ToString()}<div class='toptop'> Top 5</div></div></a>");
-            sbTop5.Append("\n<div class='top5row'><div class='top5subhead'>#</div><div class='top5subhead'>Team</div><div class='top5subhead'>Score</div></div>\n");
-
-            // TODO: What am I doing here? Is this necessary?
-            twOut.Write(sbOut.ToString());
-            sbOut.Replace("\n", Environment.NewLine);
-            sbOut = new StringBuilder();
+            sbTop5.Append("\n<div class='top5row'><div class='top5subhead'>#</div><div class='top5subhead'>Team</div><div class='top5subhead'>Score</div></div>");
 
             // Write the score table for the left side of the page
             int rank = 0, stored = 0;
@@ -209,7 +174,7 @@ namespace BeatGraphs.Modules
                 // Make a copy of this row if it's one of the top 5 teams.
                 if (i < 5)
                 {
-                    sbTop5.Append($"<div class='top5row'><div class='top5cell'>{i + 1}</div>");
+                    sbTop5.Append($"\n<div class='top5row'><div class='top5cell'>{i + 1}</div>");
                     sbTop5.Append($"<div class='top5cell top5midcell'><img src='{Helpers.GetImage(Builder.matrix[maxindex].franchiseID, league, season)}' /></div>");
                     sbTop5.Append($"<div class='top5cell'>{string.Format("{0:N2}", Math.Round(double.Parse(Builder.matrix[maxindex].score), 2))}</div></div>");
                 }
@@ -224,16 +189,13 @@ namespace BeatGraphs.Modules
             sbOut.Append($"<div class='grapharea'>\n");
             sbOut.Append($"<img src='{league}/{method.ToString()[0]}/{season}/{week}.png' />\n");
             sbOut.Append($"</div></div></div>\n");
+            sbOut = sbOut.Replace("\n", Environment.NewLine);
 
             sbTop5.Append("\n</div>");
             sbTop5 = sbTop5.Replace("\n", Environment.NewLine);
-            TextWriter tw5Out = new StreamWriter($"{filePath}/{league}_{method.ToString()}.php", false);
-            tw5Out.Write(sbTop5.ToString());
-            tw5Out.Close();
 
-            twOut.Write(sbOut.ToString());
-            sbOut.Replace("\n", Environment.NewLine);
-            twOut.Close();
+            Helpers.WriteFile(BasePath.file, $"/{league}/{method.ToString()[0]}/{season}/{week}.php", sbOut.ToString());
+            Helpers.WriteFile(BasePath.file, $"/{league}_{method.ToString()[0]}.php", sbTop5.ToString());
         }
 
         /// <summary>
@@ -260,7 +222,7 @@ namespace BeatGraphs.Modules
         /// </summary>
         private static void PrintGraphFile(string league, string season, Method method)
         {
-            TextWriter twOut = new StreamWriter($"{filePath}GraphOut.txt", false);
+            //TextWriter twOut = new StreamWriter($"{filePath}GraphOut.txt", false);
             var sbOut = new StringBuilder();
             var scores = new List<double>();
             var tiers = new List<List<int>>();
@@ -370,7 +332,7 @@ namespace BeatGraphs.Modules
                 }
                 #endregion
 
-                sbOut.Append($"\n\t\"{tTeam.abbreviation.Replace(" ", "")}\" [fillcolor=\"{divColor}\"][color=\"{confColor}\"][label=<<TABLE border='0' cellpadding='0' cellspacing='0'><TR><TD><IMG SRC='{filePath}{Helpers.GetImage(tTeam.franchiseID, league, season)}'/></TD></TR><TR><TD>{tTeam.abbreviation}</TD></TR></TABLE>>];");
+                sbOut.Append($"\n\t\"{tTeam.abbreviation.Replace(" ", "")}\" [fillcolor=\"{divColor}\"][color=\"{confColor}\"][label=<<TABLE border='0' cellpadding='0' cellspacing='0'><TR><TD><IMG SRC='{Helpers.GetImage(tTeam.franchiseID, league, season, true)}'/></TD></TR><TR><TD>{tTeam.abbreviation}</TD></TR></TABLE>>];");
             }
             sbOut.Append("\n");
 
@@ -527,8 +489,9 @@ namespace BeatGraphs.Modules
             sbOut.Append("\n}");
 
             // Output the text file to disk
-            twOut.Write(sbOut.ToString());
-            twOut.Close();
+            Helpers.WriteFile(BasePath.file, "GraphOut.txt", sbOut.ToString());
+            //twOut.Write(sbOut.ToString());
+            //twOut.Close();
         }
 
         /// <summary>
@@ -539,23 +502,23 @@ namespace BeatGraphs.Modules
             // Build directory structure on the web site if necessary.
             try
             {
-                form.Log("Creating League Directory", LogLevel.verbose);
+                Logger.Log("Creating League Directory", LogLevel.verbose);
                 Helpers.FtpCreateDirectory(league);
-                form.Log("Creating Method Directory", LogLevel.verbose);
+                Logger.Log("Creating Method Directory", LogLevel.verbose);
                 Helpers.FtpCreateDirectory($"{league}/{method.ToString()}");
-                form.Log("Creating Season Directory", LogLevel.verbose);
+                Logger.Log("Creating Season Directory", LogLevel.verbose);
                 Helpers.FtpCreateDirectory($"{league}/{method.ToString()}/{season}");
             }
             catch (Exception ex)
             {
-                form.Log($"Error building ftp directory tree: {ex.Message}", LogLevel.error);
+                Logger.Log($"Error building ftp directory tree: {ex.Message}", LogLevel.error);
                 return;
             }
 
             // Send the files
-            string uploadPath = $"{filePath}/{league}/{method.ToString()}/{season}/{week}";
-            ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".php");
-            ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".png");
+            //string uploadPath = $"{filePath}/{league}/{method.ToString()}/{season}/{week}";
+            //ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".php");
+            //ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".png");
 
             // TODO: Missing Top5 upload?
             // TODO: Test the above, if it works, the below can be deleted.
@@ -611,19 +574,19 @@ namespace BeatGraphs.Modules
                 // Copy the contents of the file to the request stream.
                 if (File.Exists($"{directory}{path}.{extension}"))
                 {
-                    form.Log($"Uploading {path}.{extension}", LogLevel.verbose);
+                    Logger.Log($"Uploading {path}.{extension}", LogLevel.verbose);
 
                     byte[] fileContents = File.ReadAllBytes($"{path}.{extension}");
                     Helpers.FtpUploadFile($"{path}.{extension}", fileContents);
                 }
                 else
                 {
-                    form.Log($"File could not be found. Upload failed.", LogLevel.error);
+                    Logger.Log($"File could not be found. Upload failed.", LogLevel.error);
                 }
             }
             catch (Exception ex)
             {
-                form.Log($"Error uploading file: {ex.Message}");
+                Logger.Log($"Error uploading file: {ex.Message}");
             }
         }
 

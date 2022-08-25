@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 
@@ -11,31 +12,133 @@ namespace BeatGraphs
     /// <summary>
     /// The helper class is used to handle interactions outside of the application space such as database access and FTP requests
     /// </summary>
-    // TODO: See about putting HTTP requests here and anything else external.
     public static class Helpers
     {
         private static readonly string ftpPath = ConfigurationManager.AppSettings.Get("ftpPath");
         private static readonly string ftpUser = ConfigurationManager.AppSettings.Get("ftpUser");
         private static readonly string ftpPass = ConfigurationManager.AppSettings.Get("ftpPass");
+        private static readonly string gvPath = ConfigurationManager.AppSettings.Get("graphvizPath");
+        private static readonly string filePath = ConfigurationManager.AppSettings.Get("filePath");
+        private static readonly string settingsPath = Process.GetCurrentProcess().MainModule.FileName.Substring(0, Process.GetCurrentProcess().MainModule.FileName.LastIndexOf(@"\"));
+
 
         #region File
-        public static void WriteFile(string file, string text)
+        public static void InitializeDirectory(string league, string method, string season)
         {
-            File.WriteAllText(file, text);
+            if (!Directory.Exists($"{filePath}\\{league}"))
+                Directory.CreateDirectory($"{filePath}\\{league}");
+            if (!Directory.Exists($"{filePath}\\{league}\\{method}"))
+                Directory.CreateDirectory($"{filePath}\\{league}\\{method}");
+            if (!Directory.Exists($"{filePath}\\{league}\\{method}\\{season}"))
+                Directory.CreateDirectory($"{filePath}\\{league}\\{method}\\{season}");
         }
 
-        public static string ReadFile(string file)
+        public static void WriteFile(BasePath basePath, string file, string text)
         {
-            if (!File.Exists(file))
+            File.WriteAllText($"{GetPath(basePath)}{file}", text);
+        }
+
+        public static string ReadFile(BasePath basePath, string file)
+        {
+            if (!File.Exists($"{GetPath(basePath)}{file}"))
             {
-                throw new Exception($"File {file} does not exist to be read.");
+                throw new Exception($"File {GetPath(basePath)}{file} does not exist to be read.");
             }
 
-            return File.ReadAllText(file);
+            return File.ReadAllText($"{GetPath(basePath)}{file}");
+        }
+
+        private static string GetPath(BasePath basePath)
+        {
+            switch (basePath)
+            {
+                case BasePath.file:
+                    return filePath;
+                case BasePath.settings:
+                    return settingsPath;
+                default:
+                    return "";
+            }
+        }
+        #endregion
+
+        #region GraphViz
+        public static void GenerateGraph(string imgPath)
+        {
+            string command = string.Concat(new object[] { "-Tpng -o\"", $"{filePath}{imgPath}", "\" -Kdot \"", $"{filePath}GraphOut.txt\"" });
+
+            Process pGraphVis = new Process();
+            pGraphVis.StartInfo.FileName = gvPath;
+            pGraphVis.StartInfo.Arguments = command;
+            pGraphVis.StartInfo.RedirectStandardOutput = true;
+            pGraphVis.StartInfo.UseShellExecute = false;
+            pGraphVis.StartInfo.CreateNoWindow = true;
+            pGraphVis.Start();
+            pGraphVis.WaitForExit();
         }
         #endregion
 
         #region SQL
+        /// <summary>
+        /// Clear all games for the season.
+        /// </summary>
+        public static void ClearSeason(int seasonID)
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[1];
+
+            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
+
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Clear_Season", sqlParam);
+
+            SQLDBA.Close();
+            SQLDBA.Dispose();
+        }
+
+        /// <summary>
+        /// Insert game data into the database
+        /// </summary>
+        public static void InsertGame(int seasonID, int week, int awayID, int awayScore, int homeID, int homeScore)
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[6];
+
+            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
+            sqlParam[1] = SQLDBA.CreateParameter("@WeekID", SqlDbType.Int, 64, ParameterDirection.Input, week);
+            sqlParam[2] = SQLDBA.CreateParameter("@AwayID", SqlDbType.Int, 64, ParameterDirection.Input, awayID);
+            sqlParam[3] = SQLDBA.CreateParameter("@AwayScore", SqlDbType.Int, 64, ParameterDirection.Input, awayScore);
+            sqlParam[4] = SQLDBA.CreateParameter("@HomeID", SqlDbType.Int, 64, ParameterDirection.Input, homeID);
+            sqlParam[5] = SQLDBA.CreateParameter("@HomeScore", SqlDbType.Int, 64, ParameterDirection.Input, homeScore);
+
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Insert_Game", sqlParam);
+
+            SQLDBA.Close();
+            SQLDBA.Dispose();
+        }
+
+        /// <summary>
+        /// Inserts a playoff matchup into the tracking table for use in building playoff history page
+        /// </summary>
+        public static void InsertPlayoffs(int seasonID, KeyValuePair<Tuple<int, int>, int> matchup, int winnerID)
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[5];
+
+            sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
+            sqlParam[1] = SQLDBA.CreateParameter("@Range", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Value);
+            sqlParam[2] = SQLDBA.CreateParameter("@WinnerID", SqlDbType.Int, 64, ParameterDirection.Input, winnerID);
+            sqlParam[3] = SQLDBA.CreateParameter("@AwayID", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Key.Item1);
+            sqlParam[4] = SQLDBA.CreateParameter("@HomeID", SqlDbType.Int, 64, ParameterDirection.Input, matchup.Key.Item2);
+
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Insert_Playoff", sqlParam);
+
+            SQLDBA.Close();
+            SQLDBA.Dispose();
+        }
+
         /// <summary>
         /// Gets the ID for the season represented by the given league and year
         /// </summary>
@@ -216,12 +319,12 @@ namespace BeatGraphs
         /// <summary>
         /// Gets the icon for a team for a given league year
         /// </summary>
-        public static string GetImage(int franchiseID, string league, string season)
+        public static string GetImage(int franchiseID, string league, string season, bool useFilePath = false)
         {
             SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
             SqlParameter[] sqlParam = new SqlParameter[2];
             SqlDataReader sqlDR;
-            string sImage = @"images\" + league + "\\";
+            string sImage = $@"images\{league}\";
 
             SQLDBA.Open();
             sqlParam[0] = SQLDBA.CreateParameter("@Year", SqlDbType.NVarChar, 50, ParameterDirection.Input, season);
@@ -239,7 +342,10 @@ namespace BeatGraphs
             SQLDBA.Close();
             SQLDBA.Dispose();
 
-            return sImage + ".png";
+            if (useFilePath)
+                return $"{filePath}/{sImage}.png";
+            return $"{sImage}.png";
+
         }
         #endregion
 
@@ -275,6 +381,41 @@ namespace BeatGraphs
 
             FtpWebResponse response = (FtpWebResponse)request.GetResponse();
             response.Close();
+        }
+        #endregion
+
+        #region HTML
+        /// <summary>
+        /// Read the HTML from a given URL. ErrorThrow allows the designation of how serious failure to find the page is.
+        /// </summary>
+        public static string GetHtml(string url, bool errorThrow = true)
+        {
+            string html = "";
+
+            try
+            {
+                HttpWebRequest hwRequest = (HttpWebRequest)WebRequest.Create(url);
+                using (HttpWebResponse hwResponse = (HttpWebResponse)hwRequest.GetResponse())
+                {
+                    using (StreamReader srReader = new StreamReader(hwResponse.GetResponseStream()))
+                    {
+                        html = srReader.ReadToEnd();
+                    }
+                }
+            }
+            catch
+            {
+                if (errorThrow)
+                {
+                    Logger.Log($"Requested page could not be accessed and may not yet exist: {url}", LogLevel.error);
+                    throw;
+                }
+                else
+                {
+                    Logger.Log($"Requested page could not be accessed and may not yet exist: {url}", LogLevel.warning);
+                }
+            }
+            return html;
         }
         #endregion
     }

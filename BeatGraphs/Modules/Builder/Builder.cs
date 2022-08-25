@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 // TODO: Find better objects than List<T> for most of the below
 namespace BeatGraphs.Modules
@@ -16,8 +13,6 @@ namespace BeatGraphs.Modules
     /// </summary>
     public static class Builder
     {
-        public static BeatGraphForm form;   // Used only to allow logging to the form.
-
         // Private lists are used for calculation purposes only
         private static List<List<int>> allPaths = new List<List<int>>();    // Tracks all paths involved in loops at each loop size
         private static List<List<int>> beatLoops = new List<List<int>>();   // Tracks surviving loops at each loop size
@@ -42,11 +37,8 @@ namespace BeatGraphs.Modules
         /// <param name="seasons">Which seasons will be processed in the run</param>
         /// <param name="methods">Which methods will be processed in the run</param>
         /// <param name="range">Which range of weeks will be processed in the run</param>
-        /// <param name="bgForm">The main form for logging purposes</param>
-        public static void Run(List<string> leagues, List<string> seasons, List<Method> methods, int range, BeatGraphForm bgForm)
+        public static void Run(List<string> leagues, List<string> seasons, List<Method> methods, int range)
         {
-            form = bgForm;
-
             foreach (var season in seasons)
             {
                 foreach (var league in leagues)
@@ -77,15 +69,15 @@ namespace BeatGraphs.Modules
                         foreach (var week in weeks)
                         {
                             // Now that we know the exact details for the run, build the data and write the files.
-                            form.Log($"Building the {method.ToString()} graph of Week {week} of the {season} {league} season.");
+                            Logger.Log($"Building the {method.ToString()} graph of Week {week} of the {season} {league} season.");
 
                             BuildFiles(league, season, method, week.ToString());
-                            Writer.ProcessFiles(league, season, method, week.ToString(), bgForm);
+                            Writer.ProcessFiles(league, season, method, week.ToString());
                         }
                     }
                 }
             }
-            form.Log($"Graph building complete.");
+            Logger.Log($"Graph building complete.");
         }
 
         /// <summary>
@@ -164,7 +156,7 @@ namespace BeatGraphs.Modules
                 }
             }
 
-            form.Log("Games loaded from database.", LogLevel.verbose);
+            Logger.Log("Games loaded from database.", LogLevel.verbose);
         }
 
         /// <summary>
@@ -182,7 +174,7 @@ namespace BeatGraphs.Modules
             // While there are loops of any size
             while (isLoop())
             {
-                form.Log($"We're starting off with these ambiguous BeatWins for LoopSize {iLoopSize}", LogLevel.verbose);
+                Logger.Log($"We're starting off with these ambiguous BeatWins for LoopSize {iLoopSize}", LogLevel.verbose);
                 beatLoops.Clear();  // Clears the amount of BeatLoops of this size
 
                 // Go through all of the teams
@@ -219,7 +211,7 @@ namespace BeatGraphs.Modules
                         // Only add the BeatWin to the list if it's not already there, otherwise, build a list of all links involved in loops at this size
                         if (!InBeatList(teamA, teamB))
                         {
-                            form.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
+                            Logger.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
                             beatList.Add(new Game(teamA, teamB, matrix[teams.IndexOf(teamA)].ScoreList[teamB]));
                         }  // beatList is a list of links and their weights that will be used to resolve the loops
                     }
@@ -247,8 +239,8 @@ namespace BeatGraphs.Modules
             int teamB;
             double minPoints = FindMinPoints(); // Get the lowest weight for the set of paths in remaining loops.
 
-            form.Log($"Found minimum points of {minPoints} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
-            form.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
+            Logger.Log($"Found minimum points of {minPoints} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
+            Logger.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
 
             // Reduce all paths by the minimum weight
             for (int i = 0; i < beatList.Count; i++)
@@ -263,11 +255,11 @@ namespace BeatGraphs.Modules
             {
                 if (LoopContainsZero(beatLoops[i]))
                 {
-                    form.Log(string.Join("->", beatLoops[i]), LogLevel.verbose);
+                    Logger.Log(string.Join("->", beatLoops[i]), LogLevel.verbose);
                     beatLoops.RemoveAt(i--);
                 }
             }
-            form.Log($"Which leaves these ambiguous games on the BeatList:", LogLevel.verbose);
+            Logger.Log($"Which leaves these ambiguous games on the BeatList:", LogLevel.verbose);
             beatList.Clear();
 
             // Reload the beatList with games still involved in loops.
@@ -279,7 +271,7 @@ namespace BeatGraphs.Modules
                     teamB = beatLoops[i][j + 1];
                     if (!InBeatList(teamA, teamB))
                     {
-                        form.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
+                        Logger.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
                         beatList.Add(new Game(teamA, teamB, matrix[teams.IndexOf(teamA)].ScoreList[teamB]));
                     }
                 }
@@ -296,8 +288,8 @@ namespace BeatGraphs.Modules
             int teamB;
             double minWeight = FindMinWeight(); // Get the lowest weight for the set of paths in remaining loops.
 
-            form.Log($"Found minimum weight of {minWeight} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
-            form.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
+            Logger.Log($"Found minimum weight of {minWeight} and subtracting from all involved BeatLoop strengths.", LogLevel.verbose);
+            Logger.Log($"These BeatLoops were broken in this pass:", LogLevel.verbose);
 
             // Reduce all paths by the minimum weight
             for (int i = 0; i < beatLoops.Count; i++)
@@ -318,11 +310,11 @@ namespace BeatGraphs.Modules
             {
                 if (LoopContainsZero(beatLoops[i]))
                 {
-                    form.Log(string.Join("->", beatLoops[i]), LogLevel.verbose);
+                    Logger.Log(string.Join("->", beatLoops[i]), LogLevel.verbose);
                     beatLoops.RemoveAt(i--);
                 }
             }
-            form.Log($"Which leaves these ambiguous games on the BeatList:", LogLevel.verbose);
+            Logger.Log($"Which leaves these ambiguous games on the BeatList:", LogLevel.verbose);
             beatList.Clear();
 
             // Reload the beatList with games still involved in loops.
@@ -334,7 +326,7 @@ namespace BeatGraphs.Modules
                     teamB = beatLoops[i][j + 1];
                     if (!InBeatList(teamA, teamB))
                     {
-                        form.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
+                        Logger.Log($"{matrix[teams.IndexOf(teamA)].abbreviation}({teamA})->{matrix[teams.IndexOf(teamB)].abbreviation}({teamB})", LogLevel.verbose);
                         beatList.Add(new Game(teamA, teamB, matrix[teams.IndexOf(teamA)].ScoreList[teamB]));
                     }
                 }
@@ -747,13 +739,5 @@ namespace BeatGraphs.Modules
 
             currentPath.RemoveAt(currentPath.Count - 1);
         }
-    }
-
-    // TODO: Find a better place for this
-    public enum Method
-    {
-        Standard,
-        Iterative,
-        Weighted
     }
 }

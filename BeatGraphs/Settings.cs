@@ -8,7 +8,6 @@ namespace BeatGraphs
     public static class Settings
     {
         private static Dictionary<string, bool> settings; 
-        static readonly string settingsPath = Process.GetCurrentProcess().MainModule.FileName.Substring(0, Process.GetCurrentProcess().MainModule.FileName.LastIndexOf(@"\"));
         static readonly string settingsFileName = "bg.config";
 
         /// <summary>
@@ -19,7 +18,7 @@ namespace BeatGraphs
             try
             {
                 // Read settings from file and apply them
-                string settingsText = Helpers.ReadFile($@"{settingsPath}\{settingsFileName}");
+                string settingsText = Helpers.ReadFile(BasePath.settings, $@"\{settingsFileName}");
                 settings = JsonConvert.DeserializeObject<Dictionary<string, bool>>(settingsText);
             }
             catch
@@ -28,10 +27,10 @@ namespace BeatGraphs
                 settings = new Dictionary<string, bool>();
                 settings.Add("verbose", false);
                 settings.Add("upload", false);
-
+                
                 // Save the defaults to file so going forward this isn't necessary
                 var settingsText = JsonConvert.SerializeObject(settings);
-                Helpers.WriteFile($@"{settingsPath}\{settingsFileName}", settingsText);
+                Helpers.WriteFile(BasePath.settings, $@"\{settingsFileName}", settingsText);
             }
         }
 
@@ -46,7 +45,7 @@ namespace BeatGraphs
 
             // Save the settings options to file
             var settingsText = JsonConvert.SerializeObject(settings);
-            Helpers.WriteFile($@"{settingsPath}\{settingsFileName}", settingsText);
+            Helpers.WriteFile(BasePath.settings, $@"\{settingsFileName}", settingsText);
         }
 
         /// <summary>

@@ -8,14 +8,22 @@ using System.Windows.Forms;
 
 namespace BeatGraphs
 {
-    // Enum for possible log levels
-    // TODO: If I make a place for enums, this might need to go there.
-    public enum LogLevel
+    public static class Logger
     {
-        verbose,
-        info,
-        warning,
-        error
+        private static BeatGraphForm form;
+
+        public static void Initialize(BeatGraphForm f)
+        {
+            form = f;
+        }
+
+        /// <summary>
+        /// Updates the rich text box with logging information
+        /// </summary>
+        public static void Log(string text, LogLevel level = LogLevel.info)
+        {
+            form.Log(text, level);
+        }
     }
 
     /// <summary>

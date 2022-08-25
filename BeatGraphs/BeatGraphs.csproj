@@ -75,6 +75,7 @@
     <Compile Include="BeatGraphForm.Designer.cs">
       <DependentUpon>BeatGraphForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Enumerations.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Logging.cs" />
     <Compile Include="Models\Game.cs" />

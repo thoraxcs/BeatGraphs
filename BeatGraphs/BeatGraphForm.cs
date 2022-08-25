@@ -23,6 +23,7 @@ namespace BeatGraphs
             InitializeComponent();
             PopulateYears();
             Settings.LoadSettings();
+            Logger.Initialize(this);
         }
 
         /// <summary>
@@ -56,10 +57,10 @@ namespace BeatGraphs
                 if (cbAllYears.Checked)
                 {
                     for (int i = FIRSTYEAR; i <= DateTime.Now.Year; i++)
-                        Updater.Run(leagues, i.ToString(), this);
+                        Updater.Run(leagues, i.ToString());
                 }
                 else
-                    Updater.Run(leagues, cbUYears.Text, this);
+                    Updater.Run(leagues, cbUYears.Text);
             }
         }
 
@@ -225,7 +226,7 @@ namespace BeatGraphs
                     weeks = int.Parse(ddlWeeks.SelectedItem.ToString());
 
                 // Execute Builder
-                Builder.Run(buildLeagues, seasons, buildMethods, weeks, this);
+                Builder.Run(buildLeagues, seasons, buildMethods, weeks);
             }
         }
 
