@@ -104,13 +104,18 @@ namespace BeatGraphs.Modules
         /// </summary>
         private static void LoadScores(string league, string season, Method method, string week)
         {
-            teams = Helpers.GetTeams(league, season);
+            // Load the teams into the matrix
+            Helpers.GetTeams(league, season).ForEach(team => matrix.Add(new Team(team, league, int.Parse(season))));
 
-            foreach (var team in teams)
-            {
-                matrix.Add(new Team(team, league, int.Parse(season)));
-                matrix[teams.IndexOf(team)].BuildScoreList(teams);
-            }
+            // Re-order the teams by city/mascot so listings will be alpabetical, copy a list of just franchiseId for indexes
+            matrix = matrix.OrderBy(t => t.city).ThenBy(t => t.mascot).ToList(); // TODO: Might want to do abbr for listing
+            teams = matrix.Select(t => t.franchiseID).ToList();
+            
+            // Build the scorelist and save the index for self-referencing of each team
+            matrix.ForEach(team => {
+                team.BuildScoreList(teams);
+                team.index = teams.IndexOf(team.franchiseID);
+            });
 
             LoadGames(league, season, method, week);
         }
@@ -510,8 +515,6 @@ namespace BeatGraphs.Modules
         /// </summary>
         public static void CalculateScores()
         {
-            // TODO: Can I ditch the scoreString and just use a double for the final score (would have to rename current score to rawScore)?
-            string scoreString;
             double maxScore;
             double minScore;
             double scoreRange;
@@ -539,7 +542,6 @@ namespace BeatGraphs.Modules
             scoreRange = maxScore + minScore;
             for (int i = 0; i < matrix.Count; i++)
             {
-                scoreString = "";
                 // Each team's raw score is the difference between their win points and loss points.
                 score = winPoints[i] - lossPoints[i];
 
@@ -547,18 +549,7 @@ namespace BeatGraphs.Modules
                 // The gist of the calculation is that higher scores are exponentially higher, so SQRT them
                 // to put them on a more reasonable scale.
                 // TODO: See if a LOG function would do a better job smoothing out the scores
-                // TODO: If I ditch the string, can I math it out so I don't need to check if score is negative?
-                if (score < 0)
-                {
-                    scoreString += "-";
-                    score = (Math.Sqrt(((-score) * 100) / scoreRange) * 100) / 100;
-                }
-                else
-                {
-                    score = (Math.Sqrt(((score) * 100) / scoreRange) * 100) / 100;
-                }
-                scoreString += score;
-                matrix[i].score = scoreString;
+                matrix[i].score = Math.Sqrt(Math.Abs(score) * 100 / scoreRange) * (score > 0 ? 1 : -1);
             }
         }
 
@@ -573,9 +564,7 @@ namespace BeatGraphs.Modules
             for (int i = 0; i < teams.Count; i++)
             {
                 if (!countedPoints[i])
-                {
-                    CountPathHelper(teams.IndexOf(teams[i]));
-                }
+                    CountPathHelper(i);
             }
 
             // Set all teams back to not having had their paths counted
@@ -585,9 +574,7 @@ namespace BeatGraphs.Modules
             for (int i = 0; i < teams.Count; i++)
             {
                 if (!countedPoints[i])
-                {
-                    CountLossPathHelper(teams.IndexOf(teams[i]));
-                }
+                    CountLossPathHelper(i);
             }
         }
 

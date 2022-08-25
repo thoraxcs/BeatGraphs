@@ -101,13 +101,10 @@ namespace BeatGraphs.Modules
             // Write the score table for the left side of the page
             int rank = 0, stored = 0;
             double lastScore = 0;
-            for (int i = 0; i < Builder.matrix.Count; i++)
-            {
-                // Find the index of the team with the highest score
-                int maxindex = GetMaxIndex();
 
+            Builder.matrix.OrderByDescending(team => team.score).ToList().ForEach(team => {
                 sbOut.Append("\n<div class='scorerow'>");
-                if (double.Parse(Builder.matrix[maxindex].score) == lastScore)
+                if (team.score == lastScore)
                 {
                     // Keep the rank the same for teams with the same score. Increment stored to track how many have the same score.
                     stored++;
@@ -120,23 +117,21 @@ namespace BeatGraphs.Modules
                 }
                 // Output column data for the team at this rank
                 sbOut.Append($"<div class='scoresamplecell'>{rank}</div>");
-                sbOut.Append($"<div class='scoresamplecell'><img src='{Helpers.GetImage(Builder.matrix[maxindex].franchiseID, league, season)}'></div>");
-                sbOut.Append($"<div class='scoresamplecell'>{string.Format("{0:N2}", Math.Round(double.Parse(Builder.matrix[maxindex].score), 2))}</div>");
-                sbOut.Append($"<div class='scoresamplecell'>{nFormat(Math.Round(Builder.winPoints[maxindex], 2))}</div>");
-                sbOut.Append($"<div class='scoresamplecell'>{nFormat(Math.Round(Builder.lossPoints[maxindex], 2))}</div></div>");
+                sbOut.Append($"<div class='scoresamplecell'><img src='{Helpers.GetImage(team.franchiseID, league, season)}'></div>");
+                sbOut.Append($"<div class='scoresamplecell'>{string.Format("{0:N2}", Math.Round(team.score, 2))}</div>");
+                sbOut.Append($"<div class='scoresamplecell'>{nFormat(Math.Round(Builder.winPoints[team.index], 2))}</div>");
+                sbOut.Append($"<div class='scoresamplecell'>{nFormat(Math.Round(Builder.lossPoints[team.index], 2))}</div></div>");
 
                 // Make a copy of this row if it's one of the top 5 teams.
-                if (i < 5)
+                if (rank + stored <= 5)
                 {
-                    sbTop5.Append($"\n<div class='top5row'><div class='top5cell'>{i + 1}</div>");
-                    sbTop5.Append($"<div class='top5cell top5midcell'><img src='{Helpers.GetImage(Builder.matrix[maxindex].franchiseID, league, season)}' /></div>");
-                    sbTop5.Append($"<div class='top5cell'>{string.Format("{0:N2}", Math.Round(double.Parse(Builder.matrix[maxindex].score), 2))}</div></div>");
+                    sbTop5.Append($"\n<div class='top5row'><div class='top5cell'>{rank}</div>");
+                    sbTop5.Append($"<div class='top5cell top5midcell'><img src='{Helpers.GetImage(team.franchiseID, league, season)}' /></div>");
+                    sbTop5.Append($"<div class='top5cell'>{string.Format("{0:N2}", Math.Round(team.score, 2))}</div></div>");
                 }
 
-                lastScore = double.Parse(Builder.matrix[maxindex].score); // Track this team's score to see if the next team has the same score
-                Builder.matrix[maxindex].score = "-9999999999999"; // Set this team's score impossibly low to mark it as "used"
-                // TODO: Perhaps add a boolean for "scoreUsed" to eliminate this ugly magic number
-            }
+                lastScore = team.score; // Track this team's score to see if the next team has the same score
+            });
 
             // Close out the files and write them to disk.
             sbOut.Append($"</div></div>\n");
@@ -192,14 +187,10 @@ namespace BeatGraphs.Modules
             sbOut.Append("\n\tgraph [nodesep=\"0.1\", ranksep=\"0.3\", size=\"8,12\"];");
             sbOut.Append("\n\tedge [arrowsize=\"0.5\"];\n");
 
-            // Recalculate scores as they've been crushed by the web file writer
-            // TODO: If the boolean is created, maybe this won't be necessary anymore?
-            Builder.CalculateScores();
-
             // Add each team's properties to the file
             foreach (Team tTeam in Builder.matrix)
             {
-                scores.Add(double.Parse(tTeam.score));
+                scores.Add(tTeam.score);
                 teamsLeft.Add(tTeam.franchiseID);
                 #region Assign Colors
                 switch (tTeam.conference)
@@ -303,7 +294,7 @@ namespace BeatGraphs.Modules
                 minScore = scores[0];
 
                 // Add every team with the minimum score to the active tier and remove them from the remaining team set
-                Builder.matrix.FindAll(delegate (Team t) { return double.Parse(t.score) == minScore; }).ForEach(team => 
+                Builder.matrix.FindAll(delegate (Team t) { return t.score == minScore; }).ForEach(team => 
                     { 
                         teamsToAdd.Add(team.franchiseID);
                         teamsLeft.Remove(team.franchiseID);
@@ -541,16 +532,6 @@ namespace BeatGraphs.Modules
             {
                 Logger.Log($"Error uploading file: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// Finds the index of the team with the highest score
-        /// </summary>
-        private static int GetMaxIndex()
-        {
-            return Builder.matrix.IndexOf(
-                Builder.matrix.Where(team => double.Parse(team.score) == 
-                    Builder.matrix.Max(t => double.Parse(t.score))).FirstOrDefault());
         }
     }
 }

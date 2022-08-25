@@ -16,8 +16,9 @@ namespace BeatGraphs
         public string abbreviation;     // The team's abbreviation to be displayed on the graphs
         public string conference;       // The conference the team is a member of (used to determine the color of the border of the cell on the graph)
         public string division;         // The division the team is a member of (used to determine the fill color of the cell on the graph)
-        public string score;            // The team's raw score to determine rankings
+        public double score;            // The team's raw score to determine rankings
         public Dictionary<int, double> ScoreList; // Lists the total weight of all wins against each team
+        public int index;               // Track the team's own index for quick reference
 
         /// <summary>
         /// This Constructor requires a franchise ID and a league marker that will allow us to 
@@ -28,6 +29,7 @@ namespace BeatGraphs
         /// <param name="year">The league year (season) to look up</param>
         public Team(int teamID, string cbLeague, int year)
         {
+            // TODO: Move SQL to helper
             SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
             SqlParameter[] sqlParam = new SqlParameter[3];
             SqlDataReader sqlDR;
