@@ -62,58 +62,11 @@ namespace BeatGraphs.Modules
             }
 
             // Output Winless and Lossless Teams
-            // TODO: Try to simplify into something like Builder.matrix.Where(m => m.WHEREALL(s => s.ScoreList == 0)).Join(", ")
             sbOut.Append("<br><b>These teams have no surviving BeatLosses:</b><br>\n");
-            bool bLess, bFirst = true;
-            foreach (Team tTeam in Builder.matrix)
-            {
-                bLess = true;
-                foreach (Team tTeam2 in Builder.matrix)
-                {
-                    if (tTeam2.ScoreList[tTeam.franchiseID] > 0)
-                    {
-                        bLess = false;
-                        continue;
-                    }
-                }
-
-                if (bLess)
-                {
-                    if (!bFirst)
-                        sbOut.Append($", {tTeam.abbreviation}");
-                    else
-                    {
-                        sbOut.Append(tTeam.abbreviation);
-                        bFirst = false;
-                    }
-                }
-            }
+            sbOut.Append(string.Join(", ", Builder.matrix.Where(team => Builder.matrix.Sum(sl => sl.ScoreList[team.franchiseID]) == 0).Select(team => team.abbreviation).OrderBy(abbr => abbr)));
 
             sbOut.Append("\n<br>\n<br><b>These teams have no surviving BeatWins:</b><br>\n");
-            bFirst = true;
-            foreach (Team tTeam in Builder.matrix)
-            {
-                bLess = true;
-                foreach (var dScore in tTeam.ScoreList)
-                {
-                    if (dScore.Value > 0)
-                    {
-                        bLess = false;
-                        continue;
-                    }
-                }
-
-                if (bLess)
-                {
-                    if (!bFirst)
-                        sbOut.Append($", {tTeam.abbreviation}");
-                    else
-                    {
-                        sbOut.Append(tTeam.abbreviation);
-                        bFirst = false;
-                    }
-                }
-            }
+            sbOut.Append(string.Join(", ", Builder.matrix.Where(team => team.ScoreList.Sum(sl => sl.Value) == 0).Select(team => team.abbreviation).OrderBy(abbr => abbr)));
 
             // Output BeatLoops
             sbOut.Append("\n<br>\n<br><b>These were the BeatLoops resolved:</b><br>\n");
