@@ -144,6 +144,7 @@ namespace BeatGraphs.Modules
             sbTop5 = sbTop5.Replace("\n", Environment.NewLine);
 
             Helpers.WriteFile(BasePath.file, $"/{league}/{method.ToString()[0]}/{season}/{week}.php", sbOut.ToString());
+            // TODO: Only write Top5 for the active season
             Helpers.WriteFile(BasePath.file, $"/{league}_{method.ToString()[0]}.php", sbTop5.ToString());
         }
 

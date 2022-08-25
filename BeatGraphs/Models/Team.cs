@@ -1,10 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.SqlClient;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace BeatGraphs
 {
@@ -27,40 +21,25 @@ namespace BeatGraphs
         /// <param name="teamID">The team's Franchise ID.</param>
         /// <param name="cbLeague">The league this team is a member of</param>
         /// <param name="year">The league year (season) to look up</param>
-        public Team(int teamID, string cbLeague, int year)
+        public Team(int teamID, string league, int year)
         {
-            // TODO: Move SQL to helper
-            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
-            SqlParameter[] sqlParam = new SqlParameter[3];
-            SqlDataReader sqlDR;
-
-            SQLDBA.Open();
-            sqlParam[0] = SQLDBA.CreateParameter("@FranchiseID", SqlDbType.Int, 64, ParameterDirection.Input, teamID);
-            sqlParam[1] = SQLDBA.CreateParameter("@Year", SqlDbType.Int, 64, ParameterDirection.Input, year);
-            sqlParam[2] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 10, ParameterDirection.Input, cbLeague);
-
-            SQLDBA.ExecuteSqlSP("Select_Team", sqlParam, out sqlDR);
-            // Select the team's data from the database
-
-            if (sqlDR.HasRows)
-            {
-                // Populate retrieved data into the member variables
-                sqlDR.Read();
-
-                franchiseID = int.Parse(SQLDBA.sqlGet(sqlDR, "FranchiseID"));
-                city = SQLDBA.sqlGet(sqlDR, "City");
-                mascot = SQLDBA.sqlGet(sqlDR, "Mascot");
-                abbreviation = SQLDBA.sqlGet(sqlDR, "Abbreviation");
-                conference = SQLDBA.sqlGet(sqlDR, "Conference");
-                division = SQLDBA.sqlGet(sqlDR, "Division");
-            }
+            var team = Helpers.SelectTeam(teamID, year, league);
+            franchiseID = team.franchiseID;
+            city = team.city;
+            mascot = team.mascot;
+            abbreviation = team.abbreviation;
+            conference = team.conference;
+            division = team.division;
 
             ScoreList = new Dictionary<int, double>();
+        }
 
-            SQLDBA.Close();
-            sqlDR.Close();
-            SQLDBA.Dispose();
-            sqlDR.Dispose();
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Team()
+        {
+
         }
 
         /// <summary>

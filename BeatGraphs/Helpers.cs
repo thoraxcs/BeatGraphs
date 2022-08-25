@@ -243,6 +243,45 @@ namespace BeatGraphs
         }
 
         /// <summary>
+        /// Retrieves a team's information from the DB
+        /// </summary>
+        public static Team SelectTeam(int teamID, int year, string league)
+        {
+            var team = new Team();
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[3];
+            SqlDataReader sqlDR;
+
+            SQLDBA.Open();
+            sqlParam[0] = SQLDBA.CreateParameter("@FranchiseID", SqlDbType.Int, 64, ParameterDirection.Input, teamID);
+            sqlParam[1] = SQLDBA.CreateParameter("@Year", SqlDbType.Int, 64, ParameterDirection.Input, year);
+            sqlParam[2] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 10, ParameterDirection.Input, league);
+
+            SQLDBA.ExecuteSqlSP("Select_Team", sqlParam, out sqlDR);
+            // Select the team's data from the database
+
+            if (sqlDR.HasRows)
+            {
+                // Populate retrieved data into the member variables
+                sqlDR.Read();
+
+                team.franchiseID = int.Parse(SQLDBA.sqlGet(sqlDR, "FranchiseID"));
+                team.city = SQLDBA.sqlGet(sqlDR, "City");
+                team.mascot = SQLDBA.sqlGet(sqlDR, "Mascot");
+                team.abbreviation = SQLDBA.sqlGet(sqlDR, "Abbreviation");
+                team.conference = SQLDBA.sqlGet(sqlDR, "Conference");
+                team.division = SQLDBA.sqlGet(sqlDR, "Division");
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return team;
+        }
+
+        /// <summary>
         /// Gets a list of teams participating in a given league year
         /// </summary>
         public static List<int> GetTeams(string league, string season)
