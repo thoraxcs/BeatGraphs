@@ -515,11 +515,6 @@ namespace BeatGraphs.Modules
         /// </summary>
         public static void CalculateScores()
         {
-            double maxScore;
-            double minScore;
-            double scoreRange;
-            double score;
-
             // Clear and initialize the output result trackers.
             winPoints.Clear();
             lossPoints.Clear();
@@ -534,22 +529,24 @@ namespace BeatGraphs.Modules
 
             // Find the winPoints and lossPoints for each team
             CountPaths();
-            maxScore = winPoints.Max(w => w);
-            minScore = lossPoints.Max(l => l);
+            var maxScore = winPoints.Max(w => w);
+            var minScore = lossPoints.Max(l => l);
 
             // The scale for scores will be based on the difference between the max score and min score. Since minScore is 
             // a positive number now but is considered negative, it is added to know the total size of the range.
-            scoreRange = maxScore + minScore;
+            var scoreRange = maxScore + minScore;
             for (int i = 0; i < matrix.Count; i++)
             {
                 // Each team's raw score is the difference between their win points and loss points.
-                score = winPoints[i] - lossPoints[i];
+                var score = winPoints[i] - lossPoints[i];
 
                 // Calculate the final score using the SUPARSEKRIT method here which makes no real sense.
                 // The gist of the calculation is that higher scores are exponentially higher, so SQRT them
                 // to put them on a more reasonable scale.
-                // TODO: See if a LOG function would do a better job smoothing out the scores
-                matrix[i].score = Math.Sqrt(Math.Abs(score) * 100 / scoreRange) * (score > 0 ? 1 : -1);
+
+                // TODO: working with possible log based scores. Has too high values in early weeks.
+                // matrix[i].score = score == 0 ? 0 : (Math.Log10(Math.Abs(score) * 100 / scoreRange) * (score > 0 ? 1 : -1)) * 100 / 2;
+                matrix[i].score = Math.Sqrt(Math.Abs(score) * 100 / scoreRange) * (score > 0 ? 1 : -1); 
             }
         }
 
@@ -576,6 +573,11 @@ namespace BeatGraphs.Modules
                 if (!countedPoints[i])
                     CountLossPathHelper(i);
             }
+
+            foreach(var team in matrix)
+            {
+                team.ScoreList.All(s => s.Value == s.Value);
+            }    
         }
 
         /// <summary>
