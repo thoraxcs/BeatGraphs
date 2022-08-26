@@ -282,6 +282,86 @@ namespace BeatGraphs
         }
 
         /// <summary>
+        /// Gets the most current week for each league
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<string, Tuple<int, int>> GetCurrentWeeks()
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlDataReader sqlDR;
+            var weeks = new Dictionary<string, Tuple<int, int>>();
+
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Select_Current_Weeks", out sqlDR);
+
+            if (sqlDR.HasRows)
+            {
+                while (sqlDR.Read())
+                {
+                    weeks.Add(SQLDBA.sqlGet(sqlDR, "League"),
+                        new Tuple<int, int>(int.Parse(SQLDBA.sqlGet(sqlDR, "Year")),
+                                            int.Parse(SQLDBA.sqlGet(sqlDR, "maxWeek"))));
+                }
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return weeks;
+        }
+
+        /// <summary>
+        /// Gets the season status for each league
+        /// </summary>
+        /// <returns></returns>
+        public static Dictionary<string, Tuple<int, int, int>> GetSeasonStatus()
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlDataReader sqlDR;
+            var status = new Dictionary<string, Tuple<int, int, int>>();
+
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Select_Season_Status", out sqlDR);
+
+            if (sqlDR.HasRows)
+            {
+                while (sqlDR.Read())
+                {
+                    status.Add(SQLDBA.sqlGet(sqlDR, "League"),
+                        new Tuple<int, int, int>(int.Parse(SQLDBA.sqlGet(sqlDR, "Year")),
+                                            int.Parse(SQLDBA.sqlGet(sqlDR, "RangeID")),
+                                            int.Parse(SQLDBA.sqlGet(sqlDR, "ChampWins"))));
+                }
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return status;
+        }
+
+        /// <summary>
+        /// Inserts the current year's season to the DB if not there
+        /// </summary>
+        /// <returns></returns>
+        public static void InsertSeason(string league)
+        {
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[1];
+
+            SQLDBA.Open();
+            sqlParam[0] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 50, ParameterDirection.Input, league);
+            SQLDBA.ExecuteSqlSP("Insert_Season", sqlParam);
+
+            SQLDBA.Close();
+            SQLDBA.Dispose();
+        }
+
+        /// <summary>
         /// Gets a list of teams participating in a given league year
         /// </summary>
         public static List<int> GetTeams(string league, string season)

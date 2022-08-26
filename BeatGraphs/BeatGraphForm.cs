@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BeatGraphs.Modules;
+using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs
 {
@@ -14,16 +15,72 @@ namespace BeatGraphs
         private readonly int FIRSTYEAR = 1970; // Lowest limit for year
         private List<string> buildLeagues = new List<string>(); // Selected leagues for builder
         private List<Method> buildMethods = new List<Method>(); // Selected methods for builder
+        private bool loading = false;
 
         /// <summary>
         /// Constructor for the form, initializes.
         /// </summary>
         public BeatGraphForm()
         {
+            loading = true;
             InitializeComponent();
             PopulateYears();
-            Settings.LoadSettings();
+            Options.LoadSettings();
             Logger.Initialize(this);
+            clockTimer.Start();
+
+            var lastRun = Options.settings.lastRun;
+            var nextRun = Options.settings.nextRun;
+            runMLB.Checked = Options.settings.mlbRun;
+            runNFL.Checked = Options.settings.nflRun;
+            runNBA.Checked = Options.settings.nbaRun;
+            runNHL.Checked = Options.settings.nhlRun;
+            runNext.Checked = Options.settings.activeRun;
+            runStandard.Checked = Options.settings.standardRun;
+            runIterative.Checked = Options.settings.iterativeRun;
+            runWeighted.Checked = Options.settings.weightedRun;
+
+            if (nextRun == DateTime.MinValue)
+                nextRunTime.Value = DateTime.Parse($"{DateTime.Today.ToShortDateString()} 12:00:00 PM");
+            else
+                nextRunTime.Value = nextRun;
+
+            lastDate.Text = lastRun == DateTime.MinValue ? "----" : lastRun.ToString("MMM dd, yyyy");
+            lastTime.Text = lastRun == DateTime.MinValue ? "----" : lastRun.ToString("hh:mm:ss tt");
+
+            LoadNewButtons();
+
+            loading = false;
+        }
+
+        public void LoadNewButtons()
+        {
+            var seasonStatus = Helpers.GetSeasonStatus();
+            Runner.LoadNewButton(newMLB, "MLB", seasonStatus["MLB"]);
+            Runner.LoadNewButton(newNBA, "NBA", seasonStatus["NBA"]);
+            Runner.LoadNewButton(newNFL, "NFL", seasonStatus["NFL"]);
+            Runner.LoadNewButton(newNHL, "NHL", seasonStatus["NHL"]);
+        }
+
+        private void clockTimer_Tick(object sender, EventArgs e)
+        {
+            currDate.Text = DateTime.Now.ToString("MMM dd, yyyy");
+            currTime.Text = DateTime.Now.ToString("hh:mm:ss tt");
+
+            // If we've passed time to run the next scheduled run
+            if (runNext.Checked && DateTime.Now > nextRunTime.Value && Options.settings.lastRun < nextRunTime.Value)
+            {
+                Options.RunTriggeredAt(DateTime.Now);
+                nextRunTime.Value = nextRunTime.Value.AddDays(1);
+
+                runNow_Click(sender, e);
+
+                //if (systemTray.Visible == true)
+                //{
+                //    systemTray.BalloonTipText = "Ran the thing";
+                //    systemTray.ShowBalloonTip(1000);
+                //}
+            }
         }
 
         /// <summary>
@@ -378,6 +435,73 @@ namespace BeatGraphs
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void schedule_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!loading)
+                Options.SaveSchedule(runMLB.Checked, runNBA.Checked, runNFL.Checked, runNHL.Checked, 
+                    runStandard.Checked, runIterative.Checked, runWeighted.Checked, runNext.Checked, nextRunTime.Value);
+        }
+
+        private void runNow_Click(object sender, EventArgs e)
+        {
+            var leagues = new List<string>();
+            var methods = new List<Method>();
+
+            // Add the selected leagues
+            if (runMLB.Checked)
+                leagues.Add(runMLB.Text);
+            if (runNBA.Checked)
+                leagues.Add(runNBA.Text);
+            if (runNFL.Checked)
+                leagues.Add(runNFL.Text);
+            if (runNHL.Checked)
+                leagues.Add(runNHL.Text);
+
+            // Add the selected methods
+            if (runStandard.Checked)
+                methods.Add(Method.Standard);
+            if (runIterative.Checked)
+                methods.Add(Method.Iterative);
+            if (runWeighted.Checked)
+                methods.Add(Method.Weighted);
+
+            if (leagues.Count == 0 || methods.Count == 0)
+            {
+                Logger.Log("Could not initiate scheduled run due to unselected parameters.", LogLevel.error);
+            }
+            else
+            {
+                Runner.Run(leagues, methods);
+                lastDate.Text = DateTime.Now.ToString("MMM dd, yyyy");
+                lastTime.Text = DateTime.Now.ToString("hh:mm:ss tt");
+                Options.RunTriggeredAt(DateTime.Now);
+            }
+        }
+
+        private void newMLB_Click(object sender, EventArgs e)
+        {
+            Helpers.InsertSeason("MLB");
+            LoadNewButtons();
+        }
+
+        private void newNBA_Click(object sender, EventArgs e)
+        {
+            Helpers.InsertSeason("NBA");
+            LoadNewButtons();
+        }
+
+        private void newNFL_Click(object sender, EventArgs e)
+        {
+            Helpers.InsertSeason("NFL");
+            LoadNewButtons();
+        }
+
+        private void newNHL_Click(object sender, EventArgs e)
+        {
+            Helpers.InsertSeason("NHL");
+            LoadNewButtons();
         }
     }
 }

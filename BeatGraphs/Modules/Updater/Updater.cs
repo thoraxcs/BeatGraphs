@@ -13,6 +13,7 @@ namespace BeatGraphs.Modules
     public static class Updater
     {
         private static readonly int MIDYEARCUTOFF = 225; // 225 is an arbitary number chosen to represent the a split during the offseason
+        private static bool updateLocked = false;
 
         /// <summary>
         /// Entry point to the updater
@@ -21,6 +22,14 @@ namespace BeatGraphs.Modules
         /// <param name="season">The season to be included in the update, multiple seasons are handled at the calling level.</param>
         public static void Run(List<string> leagues, string season)
         {
+            if (updateLocked)
+            {
+                Logger.Log($"Cannot process score update request for {season} {string.Join(", ", leagues)} as another update process is in progress.", LogLevel.error);
+                return;
+            }
+
+            updateLocked = true;
+
             // Trigger the appropriate league parsers
             if (leagues.Contains("MLB"))
                 loadMLB("MLB", season);
@@ -30,6 +39,8 @@ namespace BeatGraphs.Modules
                 loadNFL("NFL", season);
             if (leagues.Contains("NHL"))
                 loadNHL("NHL", season);
+
+            updateLocked = false;
         }
 
         /// <summary>

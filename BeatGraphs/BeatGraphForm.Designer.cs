@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BeatGraphForm));
             this.tbOutput = new System.Windows.Forms.RichTextBox();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.menuToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -69,8 +69,33 @@
             this.cbAllYears = new System.Windows.Forms.CheckBox();
             this.butUpdate = new System.Windows.Forms.Button();
             this.cbUYears = new System.Windows.Forms.ComboBox();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.clockLabel = new System.Windows.Forms.Label();
+            this.currTime = new System.Windows.Forms.Label();
+            this.currDate = new System.Windows.Forms.Label();
+            this.lastDate = new System.Windows.Forms.Label();
+            this.lastRun = new System.Windows.Forms.Label();
+            this.lastTime = new System.Windows.Forms.Label();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.nextRunTime = new System.Windows.Forms.DateTimePicker();
+            this.runNext = new System.Windows.Forms.CheckBox();
+            this.runStandard = new System.Windows.Forms.CheckBox();
+            this.runIterative = new System.Windows.Forms.CheckBox();
+            this.runMLB = new System.Windows.Forms.CheckBox();
+            this.runWeighted = new System.Windows.Forms.CheckBox();
+            this.runNBA = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.runNFL = new System.Windows.Forms.CheckBox();
+            this.runNHL = new System.Windows.Forms.CheckBox();
             this.systemTray = new System.Windows.Forms.NotifyIcon(this.components);
-            this.menuStrip1.SuspendLayout();
+            this.clockTimer = new System.Windows.Forms.Timer(this.components);
+            this.runNow = new System.Windows.Forms.Button();
+            this.newMLB = new System.Windows.Forms.Button();
+            this.newNBA = new System.Windows.Forms.Button();
+            this.newNFL = new System.Windows.Forms.Button();
+            this.newNHL = new System.Windows.Forms.Button();
+            this.menuStrip.SuspendLayout();
             this.tabBuilder.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -79,6 +104,9 @@
             this.moduleSelect.SuspendLayout();
             this.tabUpdater.SuspendLayout();
             this.groupBox5.SuspendLayout();
+            this.tabPage1.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbOutput
@@ -91,15 +119,15 @@
             this.tbOutput.TabIndex = 1;
             this.tbOutput.Text = "";
             // 
-            // menuStrip1
+            // menuStrip
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(626, 24);
-            this.menuStrip1.TabIndex = 2;
-            this.menuStrip1.Text = "menuStrip1";
+            this.menuStrip.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip.Name = "menuStrip";
+            this.menuStrip.Size = new System.Drawing.Size(626, 24);
+            this.menuStrip.TabIndex = 2;
+            this.menuStrip.Text = "menuStrip1";
             // 
             // menuToolStripMenuItem
             // 
@@ -113,14 +141,14 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -400,6 +428,7 @@
             // 
             this.moduleSelect.Controls.Add(this.tabUpdater);
             this.moduleSelect.Controls.Add(this.tabBuilder);
+            this.moduleSelect.Controls.Add(this.tabPage1);
             this.moduleSelect.Location = new System.Drawing.Point(12, 27);
             this.moduleSelect.Name = "moduleSelect";
             this.moduleSelect.SelectedIndex = 0;
@@ -504,11 +533,277 @@
             this.cbUYears.Size = new System.Drawing.Size(59, 21);
             this.cbUYears.TabIndex = 4;
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.newNHL);
+            this.tabPage1.Controls.Add(this.newNFL);
+            this.tabPage1.Controls.Add(this.newNBA);
+            this.tabPage1.Controls.Add(this.newMLB);
+            this.tabPage1.Controls.Add(this.panel1);
+            this.tabPage1.Controls.Add(this.groupBox6);
+            this.tabPage1.Location = new System.Drawing.Point(4, 22);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(596, 159);
+            this.tabPage1.TabIndex = 2;
+            this.tabPage1.Text = "Schedule Runs";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.clockLabel);
+            this.panel1.Controls.Add(this.currTime);
+            this.panel1.Controls.Add(this.currDate);
+            this.panel1.Controls.Add(this.lastDate);
+            this.panel1.Controls.Add(this.lastRun);
+            this.panel1.Controls.Add(this.lastTime);
+            this.panel1.Location = new System.Drawing.Point(212, 11);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(200, 142);
+            this.panel1.TabIndex = 9;
+            // 
+            // clockLabel
+            // 
+            this.clockLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.clockLabel.Location = new System.Drawing.Point(3, 0);
+            this.clockLabel.Name = "clockLabel";
+            this.clockLabel.Size = new System.Drawing.Size(194, 18);
+            this.clockLabel.TabIndex = 0;
+            this.clockLabel.Text = "Current Time";
+            this.clockLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // currTime
+            // 
+            this.currTime.Location = new System.Drawing.Point(3, 40);
+            this.currTime.Name = "currTime";
+            this.currTime.Size = new System.Drawing.Size(194, 23);
+            this.currTime.TabIndex = 8;
+            this.currTime.Text = "label5";
+            this.currTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // currDate
+            // 
+            this.currDate.Location = new System.Drawing.Point(3, 20);
+            this.currDate.Name = "currDate";
+            this.currDate.Size = new System.Drawing.Size(194, 23);
+            this.currDate.TabIndex = 5;
+            this.currDate.Text = "label2";
+            this.currDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lastDate
+            // 
+            this.lastDate.Location = new System.Drawing.Point(3, 84);
+            this.lastDate.Name = "lastDate";
+            this.lastDate.Size = new System.Drawing.Size(194, 23);
+            this.lastDate.TabIndex = 6;
+            this.lastDate.Text = "label3";
+            this.lastDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lastRun
+            // 
+            this.lastRun.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lastRun.Location = new System.Drawing.Point(3, 64);
+            this.lastRun.Name = "lastRun";
+            this.lastRun.Size = new System.Drawing.Size(194, 17);
+            this.lastRun.TabIndex = 3;
+            this.lastRun.Text = "Last Run";
+            this.lastRun.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lastTime
+            // 
+            this.lastTime.Location = new System.Drawing.Point(3, 104);
+            this.lastTime.Name = "lastTime";
+            this.lastTime.Size = new System.Drawing.Size(194, 23);
+            this.lastTime.TabIndex = 7;
+            this.lastTime.Text = "label4";
+            this.lastTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.runNow);
+            this.groupBox6.Controls.Add(this.nextRunTime);
+            this.groupBox6.Controls.Add(this.runNext);
+            this.groupBox6.Controls.Add(this.runStandard);
+            this.groupBox6.Controls.Add(this.runIterative);
+            this.groupBox6.Controls.Add(this.runMLB);
+            this.groupBox6.Controls.Add(this.runWeighted);
+            this.groupBox6.Controls.Add(this.runNBA);
+            this.groupBox6.Controls.Add(this.label1);
+            this.groupBox6.Controls.Add(this.runNFL);
+            this.groupBox6.Controls.Add(this.runNHL);
+            this.groupBox6.Location = new System.Drawing.Point(6, 6);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(200, 147);
+            this.groupBox6.TabIndex = 2;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "Repeating Schedule";
+            // 
+            // nextRunTime
+            // 
+            this.nextRunTime.CustomFormat = "hh:mm tt";
+            this.nextRunTime.Format = System.Windows.Forms.DateTimePickerFormat.Time;
+            this.nextRunTime.Location = new System.Drawing.Point(90, 19);
+            this.nextRunTime.Name = "nextRunTime";
+            this.nextRunTime.ShowUpDown = true;
+            this.nextRunTime.Size = new System.Drawing.Size(96, 20);
+            this.nextRunTime.TabIndex = 10;
+            this.nextRunTime.ValueChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runNext
+            // 
+            this.runNext.AutoSize = true;
+            this.runNext.Location = new System.Drawing.Point(67, 22);
+            this.runNext.Name = "runNext";
+            this.runNext.Size = new System.Drawing.Size(15, 14);
+            this.runNext.TabIndex = 13;
+            this.runNext.UseVisualStyleBackColor = true;
+            this.runNext.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runStandard
+            // 
+            this.runStandard.AutoSize = true;
+            this.runStandard.Location = new System.Drawing.Point(90, 48);
+            this.runStandard.Name = "runStandard";
+            this.runStandard.Size = new System.Drawing.Size(69, 17);
+            this.runStandard.TabIndex = 10;
+            this.runStandard.Text = "Standard";
+            this.runStandard.UseVisualStyleBackColor = true;
+            this.runStandard.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runIterative
+            // 
+            this.runIterative.AutoSize = true;
+            this.runIterative.Location = new System.Drawing.Point(90, 71);
+            this.runIterative.Name = "runIterative";
+            this.runIterative.Size = new System.Drawing.Size(64, 17);
+            this.runIterative.TabIndex = 11;
+            this.runIterative.Text = "Iterative";
+            this.runIterative.UseVisualStyleBackColor = true;
+            this.runIterative.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runMLB
+            // 
+            this.runMLB.AutoSize = true;
+            this.runMLB.Location = new System.Drawing.Point(11, 48);
+            this.runMLB.Name = "runMLB";
+            this.runMLB.Size = new System.Drawing.Size(48, 17);
+            this.runMLB.TabIndex = 4;
+            this.runMLB.Text = "MLB";
+            this.runMLB.UseVisualStyleBackColor = true;
+            this.runMLB.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runWeighted
+            // 
+            this.runWeighted.AutoSize = true;
+            this.runWeighted.Location = new System.Drawing.Point(90, 94);
+            this.runWeighted.Name = "runWeighted";
+            this.runWeighted.Size = new System.Drawing.Size(72, 17);
+            this.runWeighted.TabIndex = 12;
+            this.runWeighted.Text = "Weighted";
+            this.runWeighted.UseVisualStyleBackColor = true;
+            this.runWeighted.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runNBA
+            // 
+            this.runNBA.AutoSize = true;
+            this.runNBA.Location = new System.Drawing.Point(11, 71);
+            this.runNBA.Name = "runNBA";
+            this.runNBA.Size = new System.Drawing.Size(48, 17);
+            this.runNBA.TabIndex = 5;
+            this.runNBA.Text = "NBA";
+            this.runNBA.UseVisualStyleBackColor = true;
+            this.runNBA.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(8, 21);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(58, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Next Run: ";
+            // 
+            // runNFL
+            // 
+            this.runNFL.AutoSize = true;
+            this.runNFL.Location = new System.Drawing.Point(11, 94);
+            this.runNFL.Name = "runNFL";
+            this.runNFL.Size = new System.Drawing.Size(46, 17);
+            this.runNFL.TabIndex = 6;
+            this.runNFL.Text = "NFL";
+            this.runNFL.UseVisualStyleBackColor = true;
+            this.runNFL.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
+            // runNHL
+            // 
+            this.runNHL.AutoSize = true;
+            this.runNHL.Location = new System.Drawing.Point(11, 117);
+            this.runNHL.Name = "runNHL";
+            this.runNHL.Size = new System.Drawing.Size(48, 17);
+            this.runNHL.TabIndex = 7;
+            this.runNHL.Text = "NHL";
+            this.runNHL.UseVisualStyleBackColor = true;
+            this.runNHL.CheckedChanged += new System.EventHandler(this.schedule_CheckedChanged);
+            // 
             // systemTray
             // 
             this.systemTray.Icon = ((System.Drawing.Icon)(resources.GetObject("systemTray.Icon")));
             this.systemTray.Text = "BeatGraphs";
             this.systemTray.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.systemTray_Click);
+            // 
+            // clockTimer
+            // 
+            this.clockTimer.Tick += new System.EventHandler(this.clockTimer_Tick);
+            // 
+            // runNow
+            // 
+            this.runNow.Location = new System.Drawing.Point(90, 113);
+            this.runNow.Name = "runNow";
+            this.runNow.Size = new System.Drawing.Size(96, 23);
+            this.runNow.TabIndex = 10;
+            this.runNow.Text = "Run Now";
+            this.runNow.UseVisualStyleBackColor = true;
+            this.runNow.Click += new System.EventHandler(this.runNow_Click);
+            // 
+            // newMLB
+            // 
+            this.newMLB.Location = new System.Drawing.Point(430, 25);
+            this.newMLB.Name = "newMLB";
+            this.newMLB.Size = new System.Drawing.Size(149, 23);
+            this.newMLB.TabIndex = 10;
+            this.newMLB.Text = "Insert MLB Season";
+            this.newMLB.UseVisualStyleBackColor = true;
+            this.newMLB.Click += new System.EventHandler(this.newMLB_Click);
+            // 
+            // newNBA
+            // 
+            this.newNBA.Location = new System.Drawing.Point(430, 54);
+            this.newNBA.Name = "newNBA";
+            this.newNBA.Size = new System.Drawing.Size(149, 23);
+            this.newNBA.TabIndex = 11;
+            this.newNBA.Text = "Insert NBA Season";
+            this.newNBA.UseVisualStyleBackColor = true;
+            this.newNBA.Click += new System.EventHandler(this.newNBA_Click);
+            // 
+            // newNFL
+            // 
+            this.newNFL.Location = new System.Drawing.Point(430, 83);
+            this.newNFL.Name = "newNFL";
+            this.newNFL.Size = new System.Drawing.Size(149, 23);
+            this.newNFL.TabIndex = 12;
+            this.newNFL.Text = "Insert NFL Season";
+            this.newNFL.UseVisualStyleBackColor = true;
+            this.newNFL.Click += new System.EventHandler(this.newNFL_Click);
+            // 
+            // newNHL
+            // 
+            this.newNHL.Location = new System.Drawing.Point(430, 112);
+            this.newNHL.Name = "newNHL";
+            this.newNHL.Size = new System.Drawing.Size(149, 23);
+            this.newNHL.TabIndex = 13;
+            this.newNHL.Text = "Insert NHL Season";
+            this.newNHL.UseVisualStyleBackColor = true;
+            this.newNHL.Click += new System.EventHandler(this.newNHL_Click);
             // 
             // BeatGraphForm
             // 
@@ -517,15 +812,17 @@
             this.ClientSize = new System.Drawing.Size(626, 491);
             this.Controls.Add(this.tbOutput);
             this.Controls.Add(this.moduleSelect);
-            this.Controls.Add(this.menuStrip1);
+            this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "BeatGraphForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "BeatGraphs";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MinimizeOnClose);
             this.Resize += new System.EventHandler(this.MinimizeForm);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
+            this.menuStrip.ResumeLayout(false);
+            this.menuStrip.PerformLayout();
             this.tabBuilder.ResumeLayout(false);
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
@@ -540,6 +837,10 @@
             this.tabUpdater.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -547,7 +848,7 @@
 
         #endregion
         private System.Windows.Forms.RichTextBox tbOutput;
-        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.MenuStrip menuStrip;
         private System.Windows.Forms.ToolStripMenuItem menuToolStripMenuItem;
         private System.Windows.Forms.TabPage tabBuilder;
         private System.Windows.Forms.GroupBox groupBox4;
@@ -586,6 +887,31 @@
         private System.Windows.Forms.NotifyIcon systemTray;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.Label clockLabel;
+        private System.Windows.Forms.Timer clockTimer;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.CheckBox runStandard;
+        private System.Windows.Forms.CheckBox runIterative;
+        private System.Windows.Forms.CheckBox runMLB;
+        private System.Windows.Forms.CheckBox runWeighted;
+        private System.Windows.Forms.CheckBox runNBA;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox runNFL;
+        private System.Windows.Forms.CheckBox runNHL;
+        private System.Windows.Forms.Label lastRun;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Label currTime;
+        private System.Windows.Forms.Label currDate;
+        private System.Windows.Forms.Label lastDate;
+        private System.Windows.Forms.Label lastTime;
+        private System.Windows.Forms.DateTimePicker nextRunTime;
+        private System.Windows.Forms.CheckBox runNext;
+        private System.Windows.Forms.Button runNow;
+        private System.Windows.Forms.Button newNHL;
+        private System.Windows.Forms.Button newNFL;
+        private System.Windows.Forms.Button newNBA;
+        private System.Windows.Forms.Button newMLB;
     }
 }
 

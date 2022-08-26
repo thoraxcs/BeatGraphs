@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs.Modules
 {
@@ -35,7 +36,7 @@ namespace BeatGraphs.Modules
             Helpers.GenerateGraph(imgPath);
 
             // Upload files to BeatGraphs.com
-            if (Settings.Get("upload"))
+            if (Options.settings.upload)
                 FtpFiles(league, season, method, week);
         }
 

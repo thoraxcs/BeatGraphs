@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs
 {
@@ -37,7 +38,7 @@ namespace BeatGraphs
         public static void AppendText(this RichTextBox box, string text, LogLevel level)
         {
             // Only display verbose logs when requested
-            if (Settings.Get("verbose") || level != LogLevel.verbose)
+            if (Options.settings.verbose || level != LogLevel.verbose)
             {
                 box.SelectionStart = box.TextLength;
                 box.SelectionLength = 0;
@@ -51,6 +52,9 @@ namespace BeatGraphs
                         break;
                     case LogLevel.error:
                         color = Color.Red;
+                        break;
+                    case LogLevel.special:
+                        color = Color.Lime;
                         break;
                     default:
                         color = Color.White;

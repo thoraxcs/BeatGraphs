@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs
 {
@@ -21,8 +22,8 @@ namespace BeatGraphs
         public SettingsForm()
         {
             InitializeComponent();
-            setVerbose.Checked = Settings.Get("verbose");
-            setUpload.Checked = Settings.Get("upload");
+            setVerbose.Checked = Options.settings.verbose;
+            setUpload.Checked = Options.settings.upload;
         }
 
         /// <summary>
@@ -30,7 +31,7 @@ namespace BeatGraphs
         /// </summary>
         private void butSave_Click(object sender, EventArgs e)
         {
-            Settings.SaveSettings(setVerbose.Checked, setUpload.Checked);
+            Options.SaveSettings(setVerbose.Checked, setUpload.Checked);
             Close();
         }
 

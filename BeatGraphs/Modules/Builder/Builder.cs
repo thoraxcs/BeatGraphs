@@ -29,6 +29,8 @@ namespace BeatGraphs.Modules
         public static List<Team> matrix = new List<Team>();                 // All of the teams' data, primarly required for the ScoreList
         public static List<int> teams = new List<int>();                    // List of the teamIDs for index lookups.
 
+        private static bool buildLocked = false;
+
         /// <summary>
         /// Entry point for the Builder class. Iterates through requested input and does the calculations followed by a call to the
         /// Writer class for each.
@@ -39,6 +41,14 @@ namespace BeatGraphs.Modules
         /// <param name="range">Which range of weeks will be processed in the run</param>
         public static void Run(List<string> leagues, List<string> seasons, List<Method> methods, int range)
         {
+            if (buildLocked)
+            {
+                Logger.Log($"Cannot process build graph request as another build process is in progress.", LogLevel.error);
+                return;
+            }
+
+            buildLocked = true;
+
             foreach (var season in seasons)
             {
                 foreach (var league in leagues)
@@ -78,6 +88,8 @@ namespace BeatGraphs.Modules
                 }
             }
             Logger.Log($"Graph building complete.");
+
+            buildLocked = false;
         }
 
         /// <summary>

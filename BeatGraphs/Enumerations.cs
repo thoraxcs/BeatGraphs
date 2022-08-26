@@ -18,6 +18,7 @@ namespace BeatGraphs
     public enum LogLevel
     {
         verbose,
+        special,
         info,
         warning,
         error
