@@ -157,9 +157,9 @@ namespace BeatGraphs.Modules
 
                 if (year == 1981) // 1981 Season had an extra round
                     round = 502;
-                else if (year <= 1993) // 1970-1993 only had A/NLCS and World Series
+                else if (year < 1993) // 1970-1993 only had A/NLCS and World Series (No playoffs in 1994 due to strike)
                     round = 503;
-                else if (year <= 2012) // Divisional round introduced in 1995 (No playoffs in 1994 due to strike)
+                else if (year < 2012) // Divisional round introduced in 1995 
                     round = 502;
                 else // Wild Card round introduced in 2012
                     round = 501;
@@ -624,7 +624,7 @@ namespace BeatGraphs.Modules
 
                 if (year <= 1973) // No wild card round through 1973
                     wcGames = 0;
-                else if (year <= 1979) // 4 wild card games from 74/75 to 78/79
+                else if (year < 1979) // 4 wild card games from 74/75 to 78/79
                     wcGames = 4;
                 else if (year == 2019) // 8 "zeroth round" games in 2019 (Covid year)
                     wcGames = 8;
