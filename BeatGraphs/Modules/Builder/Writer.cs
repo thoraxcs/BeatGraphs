@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
-using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs.Modules
 {
@@ -36,8 +34,7 @@ namespace BeatGraphs.Modules
             Helpers.GenerateGraph(imgPath);
 
             // Upload files to BeatGraphs.com
-            if (Options.settings.upload)
-                FtpFiles(league, season, method, week);
+            FtpFiles(league, season, method, week);
         }
 
         /// <summary>
@@ -461,79 +458,10 @@ namespace BeatGraphs.Modules
                 return;
             }
 
-            // Send the files
-            //string uploadPath = $"{filePath}/{league}/{method.ToString()}/{season}/{week}";
-            //ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".php");
-            //ftpFile(filePath, $"{league}/{method.ToString()}/{season}/{week}", ".png");
-
-            // TODO: Missing Top5 upload?
-            // TODO: Test the above, if it works, the below can be deleted.
-            //try
-            //{
-            //    // Copy the contents of the web file to the request stream.
-            //    if (File.Exists($"{uploadPath}.php"))
-            //    {
-            //        form.Log("Uploading Web File", LogLevel.verbose);
-
-            //        byte[] fileContents = File.ReadAllBytes($"{uploadPath}.php");
-            //    }
-            //    else
-            //    {
-            //        form.Log($"Web File could not be found.  Upload failed.", LogLevel.error);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    form.Log($"Error uploading web file: {ex.Message}");
-            //}
-
-            //try
-            //{
-            //    // Copy the contents of the graph file to the request stream.
-            //    if (File.Exists($"{uploadPath}.png"))
-            //    {
-            //        form.Log("Uploading Graph File", LogLevel.verbose);
-
-            //        byte[] fileContents = File.ReadAllBytes($"{uploadPath}.png");
-            //    }
-            //    else
-            //    {
-            //        form.Log($"Graph File could not be found.  Upload failed.", LogLevel.error);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    form.Log($"Error uploading graph file: {ex.Message}");
-            //}
+            //Send the files (Top5 is only sent by Runner to ensure only most recent data gets sent)
+            Helpers.FtpUploadFile($"{league}/{method.ToString()[0]}/{season}/{week}.php");
+            Helpers.FtpUploadFile($"{league}/{method.ToString()[0]}/{season}/{week}.png");
         }
 
-        /// <summary>
-        /// Responsible for setting up the FTP call
-        /// </summary>
-        /// <param name="directory">The base directory of the file on disk</param>
-        /// <param name="path">The path of the file in the tree</param>
-        /// <param name="extension"></param>
-        private static void ftpFile(string directory, string path, string extension)
-        {
-            try
-            {
-                // Copy the contents of the file to the request stream.
-                if (File.Exists($"{directory}{path}.{extension}"))
-                {
-                    Logger.Log($"Uploading {path}.{extension}", LogLevel.verbose);
-
-                    byte[] fileContents = File.ReadAllBytes($"{path}.{extension}");
-                    Helpers.FtpUploadFile($"{path}.{extension}", fileContents);
-                }
-                else
-                {
-                    Logger.Log($"File could not be found. Upload failed.", LogLevel.error);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Log($"Error uploading file: {ex.Message}");
-            }
-        }
     }
 }

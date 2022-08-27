@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs
 {
@@ -59,6 +60,33 @@ namespace BeatGraphs
                 default:
                     return "";
             }
+        }
+
+        /// <summary>
+        /// Reads a file into memory as a byte array
+        /// </summary>
+        private static byte[] ReadBytes(string file) //string directory, string path, string extension)
+        {
+            byte[] fileContents = { };
+            try
+            {
+                // Copy the contents of the file to the byte array
+                if (File.Exists(file))
+                {
+                    Logger.Log($"Uploading {file}", LogLevel.verbose);
+
+                    fileContents = File.ReadAllBytes($"{file}");
+                }
+                else
+                {
+                    Logger.Log($"File could not be found. Upload failed.", LogLevel.error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Error uploading file: {ex.Message}");
+            }
+            return fileContents;
         }
         #endregion
 
@@ -282,6 +310,48 @@ namespace BeatGraphs
         }
 
         /// <summary>
+        /// Gets a list of leagues in the DB
+        /// </summary>
+        public static Dictionary<string, Dictionary<int, List<int>>> GetAllSeasons()
+        {
+            var leagues = new Dictionary<string, Dictionary<int, List<int>>>();
+
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlDataReader sqlDR;
+            SQLDBA.Open();
+            SQLDBA.ExecuteSqlSP("Select_Seasons_All", out sqlDR);
+
+            if (sqlDR.HasRows)
+            {
+                while (sqlDR.Read())
+                {
+                    // Builds a structure of each League/Year/Week
+                    var league = SQLDBA.sqlGet(sqlDR, "League");
+                    var year = int.Parse(SQLDBA.sqlGet(sqlDR, "Year"));
+                    var week = SQLDBA.sqlGet(sqlDR, "RangeID");
+
+                    if (!leagues.ContainsKey(league))
+                    {
+                        leagues.Add(league, new Dictionary<int, List<int>>());
+                    }
+                    if (!leagues[league].ContainsKey(year))
+                    {
+                        leagues[league].Add(year, new List<int>());
+                    }
+                    if (week != "Null")
+                        leagues[league][year].Add(int.Parse(week));
+                }
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return leagues;
+        }
+
+        /// <summary>
         /// Gets the most current week for each league
         /// </summary>
         /// <returns></returns>
@@ -475,31 +545,40 @@ namespace BeatGraphs
         /// <param name="path"></param>
         public static void FtpCreateDirectory(string path)
         {
+            try
+            {
+                FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"{ftpPath}{path}");
+                request.Method = WebRequestMethods.Ftp.MakeDirectory;
+                request.Credentials = new NetworkCredential(ftpUser, ftpPass);
+                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"{ftpPath}{path}");
-            request.Method = WebRequestMethods.Ftp.MakeDirectory;
-            request.Credentials = new NetworkCredential(ftpUser, ftpPass);
-            FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-
-            response.Close();
+                response.Close();
+            }
+            catch { } // If the directory already exists, it'll throw an error so we have to ignore it
         }
 
         /// <summary>
         /// Uploads the given file to the web directory
         /// </summary>
-        public static void FtpUploadFile(string path, byte[] file)
+        public static void FtpUploadFile(string fileName)
         {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"{ftpPath}{path}");
-            request.Method = WebRequestMethods.Ftp.UploadFile;
+            // Only upload if user set flag
+            if (Options.settings.upload == true)
+            {
+                var fileContents = ReadBytes($"{filePath}{fileName}");
 
-            request.Credentials = new NetworkCredential(ftpUser, ftpPass);
+                FtpWebRequest request = (FtpWebRequest)WebRequest.Create($"{ftpPath}{fileName}");
+                request.Method = WebRequestMethods.Ftp.UploadFile;
 
-            Stream requestStream = request.GetRequestStream();
-            requestStream.Write(file, 0, file.Length);
-            requestStream.Close();
+                request.Credentials = new NetworkCredential(ftpUser, ftpPass);
 
-            FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-            response.Close();
+                Stream requestStream = request.GetRequestStream();
+                requestStream.Write(fileContents, 0, fileContents.Length);
+                requestStream.Close();
+
+                FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+                response.Close();
+            }
         }
         #endregion
 

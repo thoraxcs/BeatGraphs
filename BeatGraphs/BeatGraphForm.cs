@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using BeatGraphs.Modules;
 using Options = BeatGraphs.SettingsRecord.Settings;
