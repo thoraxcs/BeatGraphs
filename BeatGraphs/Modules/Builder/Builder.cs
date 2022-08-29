@@ -547,6 +547,13 @@ namespace BeatGraphs.Modules
             // The scale for scores will be based on the difference between the max score and min score. Since minScore is 
             // a positive number now but is considered negative, it is added to know the total size of the range.
             var scoreRange = maxScore + minScore;
+            if (scoreRange == 0)
+            {
+                // In 2012 the MLB started its season with two teams playing a two game series a week early in Tokyo. They split
+                // the series which were the only games for what BeatGraphs defines as a week. This results in all teams having a
+                // score of 0 and causes the formula below to assign all teams a score of NaN, return to avoid problems downstream.
+                return;
+            }
             for (int i = 0; i < matrix.Count; i++)
             {
                 // Each team's raw score is the difference between their win points and loss points.

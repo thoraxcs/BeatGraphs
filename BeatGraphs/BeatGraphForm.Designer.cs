@@ -70,6 +70,10 @@
             this.butUpdate = new System.Windows.Forms.Button();
             this.cbUYears = new System.Windows.Forms.ComboBox();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.newNHL = new System.Windows.Forms.Button();
+            this.newNFL = new System.Windows.Forms.Button();
+            this.newNBA = new System.Windows.Forms.Button();
+            this.newMLB = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.clockLabel = new System.Windows.Forms.Label();
             this.currTime = new System.Windows.Forms.Label();
@@ -78,6 +82,7 @@
             this.lastRun = new System.Windows.Forms.Label();
             this.lastTime = new System.Windows.Forms.Label();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.runNow = new System.Windows.Forms.Button();
             this.nextRunTime = new System.Windows.Forms.DateTimePicker();
             this.runNext = new System.Windows.Forms.CheckBox();
             this.runStandard = new System.Windows.Forms.CheckBox();
@@ -90,11 +95,11 @@
             this.runNHL = new System.Windows.Forms.CheckBox();
             this.systemTray = new System.Windows.Forms.NotifyIcon(this.components);
             this.clockTimer = new System.Windows.Forms.Timer(this.components);
-            this.runNow = new System.Windows.Forms.Button();
-            this.newMLB = new System.Windows.Forms.Button();
-            this.newNBA = new System.Windows.Forms.Button();
-            this.newNFL = new System.Windows.Forms.Button();
-            this.newNHL = new System.Windows.Forms.Button();
+            this.RunPlayoffs = new System.Windows.Forms.GroupBox();
+            this.mlbPlayoffs = new System.Windows.Forms.Button();
+            this.nbaPlayoffs = new System.Windows.Forms.Button();
+            this.nflPlayoffs = new System.Windows.Forms.Button();
+            this.nhlPlayoffs = new System.Windows.Forms.Button();
             this.menuStrip.SuspendLayout();
             this.tabBuilder.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -107,6 +112,7 @@
             this.tabPage1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox6.SuspendLayout();
+            this.RunPlayoffs.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbOutput
@@ -437,6 +443,7 @@
             // 
             // tabUpdater
             // 
+            this.tabUpdater.Controls.Add(this.RunPlayoffs);
             this.tabUpdater.Controls.Add(this.groupBox5);
             this.tabUpdater.Controls.Add(this.cbAllYears);
             this.tabUpdater.Controls.Add(this.butUpdate);
@@ -549,6 +556,46 @@
             this.tabPage1.Text = "Schedule Runs";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // newNHL
+            // 
+            this.newNHL.Location = new System.Drawing.Point(430, 112);
+            this.newNHL.Name = "newNHL";
+            this.newNHL.Size = new System.Drawing.Size(149, 23);
+            this.newNHL.TabIndex = 13;
+            this.newNHL.Text = "Insert NHL Season";
+            this.newNHL.UseVisualStyleBackColor = true;
+            this.newNHL.Click += new System.EventHandler(this.NewSeason_Click);
+            // 
+            // newNFL
+            // 
+            this.newNFL.Location = new System.Drawing.Point(430, 83);
+            this.newNFL.Name = "newNFL";
+            this.newNFL.Size = new System.Drawing.Size(149, 23);
+            this.newNFL.TabIndex = 12;
+            this.newNFL.Text = "Insert NFL Season";
+            this.newNFL.UseVisualStyleBackColor = true;
+            this.newNFL.Click += new System.EventHandler(this.NewSeason_Click);
+            // 
+            // newNBA
+            // 
+            this.newNBA.Location = new System.Drawing.Point(430, 54);
+            this.newNBA.Name = "newNBA";
+            this.newNBA.Size = new System.Drawing.Size(149, 23);
+            this.newNBA.TabIndex = 11;
+            this.newNBA.Text = "Insert NBA Season";
+            this.newNBA.UseVisualStyleBackColor = true;
+            this.newNBA.Click += new System.EventHandler(this.NewSeason_Click);
+            // 
+            // newMLB
+            // 
+            this.newMLB.Location = new System.Drawing.Point(430, 25);
+            this.newMLB.Name = "newMLB";
+            this.newMLB.Size = new System.Drawing.Size(149, 23);
+            this.newMLB.TabIndex = 10;
+            this.newMLB.Text = "Insert MLB Season";
+            this.newMLB.UseVisualStyleBackColor = true;
+            this.newMLB.Click += new System.EventHandler(this.NewSeason_Click);
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.clockLabel);
@@ -578,7 +625,7 @@
             this.currTime.Name = "currTime";
             this.currTime.Size = new System.Drawing.Size(194, 23);
             this.currTime.TabIndex = 8;
-            this.currTime.Text = "label5";
+            this.currTime.Text = "current time";
             this.currTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // currDate
@@ -587,7 +634,7 @@
             this.currDate.Name = "currDate";
             this.currDate.Size = new System.Drawing.Size(194, 23);
             this.currDate.TabIndex = 5;
-            this.currDate.Text = "label2";
+            this.currDate.Text = "current date";
             this.currDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lastDate
@@ -596,7 +643,7 @@
             this.lastDate.Name = "lastDate";
             this.lastDate.Size = new System.Drawing.Size(194, 23);
             this.lastDate.TabIndex = 6;
-            this.lastDate.Text = "label3";
+            this.lastDate.Text = "last date";
             this.lastDate.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lastRun
@@ -615,7 +662,7 @@
             this.lastTime.Name = "lastTime";
             this.lastTime.Size = new System.Drawing.Size(194, 23);
             this.lastTime.TabIndex = 7;
-            this.lastTime.Text = "label4";
+            this.lastTime.Text = "last time";
             this.lastTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // groupBox6
@@ -637,6 +684,16 @@
             this.groupBox6.TabIndex = 2;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Repeating Schedule";
+            // 
+            // runNow
+            // 
+            this.runNow.Location = new System.Drawing.Point(90, 113);
+            this.runNow.Name = "runNow";
+            this.runNow.Size = new System.Drawing.Size(96, 23);
+            this.runNow.TabIndex = 10;
+            this.runNow.Text = "Run Now";
+            this.runNow.UseVisualStyleBackColor = true;
+            this.runNow.Click += new System.EventHandler(this.runNow_Click);
             // 
             // nextRunTime
             // 
@@ -755,55 +812,58 @@
             // 
             this.clockTimer.Tick += new System.EventHandler(this.clockTimer_Tick);
             // 
-            // runNow
+            // RunPlayoffs
             // 
-            this.runNow.Location = new System.Drawing.Point(90, 113);
-            this.runNow.Name = "runNow";
-            this.runNow.Size = new System.Drawing.Size(96, 23);
-            this.runNow.TabIndex = 10;
-            this.runNow.Text = "Run Now";
-            this.runNow.UseVisualStyleBackColor = true;
-            this.runNow.Click += new System.EventHandler(this.runNow_Click);
+            this.RunPlayoffs.Controls.Add(this.nhlPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.nflPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.nbaPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.mlbPlayoffs);
+            this.RunPlayoffs.Location = new System.Drawing.Point(390, 6);
+            this.RunPlayoffs.Name = "RunPlayoffs";
+            this.RunPlayoffs.Size = new System.Drawing.Size(196, 144);
+            this.RunPlayoffs.TabIndex = 8;
+            this.RunPlayoffs.TabStop = false;
+            this.RunPlayoffs.Text = "Run Playoffs";
             // 
-            // newMLB
+            // mlbPlayoffs
             // 
-            this.newMLB.Location = new System.Drawing.Point(430, 25);
-            this.newMLB.Name = "newMLB";
-            this.newMLB.Size = new System.Drawing.Size(149, 23);
-            this.newMLB.TabIndex = 10;
-            this.newMLB.Text = "Insert MLB Season";
-            this.newMLB.UseVisualStyleBackColor = true;
-            this.newMLB.Click += new System.EventHandler(this.newMLB_Click);
+            this.mlbPlayoffs.Location = new System.Drawing.Point(6, 19);
+            this.mlbPlayoffs.Name = "mlbPlayoffs";
+            this.mlbPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.mlbPlayoffs.TabIndex = 0;
+            this.mlbPlayoffs.Text = "Generate MLB Playoffs";
+            this.mlbPlayoffs.UseVisualStyleBackColor = true;
+            this.mlbPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
             // 
-            // newNBA
+            // nbaPlayoffs
             // 
-            this.newNBA.Location = new System.Drawing.Point(430, 54);
-            this.newNBA.Name = "newNBA";
-            this.newNBA.Size = new System.Drawing.Size(149, 23);
-            this.newNBA.TabIndex = 11;
-            this.newNBA.Text = "Insert NBA Season";
-            this.newNBA.UseVisualStyleBackColor = true;
-            this.newNBA.Click += new System.EventHandler(this.newNBA_Click);
+            this.nbaPlayoffs.Location = new System.Drawing.Point(6, 48);
+            this.nbaPlayoffs.Name = "nbaPlayoffs";
+            this.nbaPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nbaPlayoffs.TabIndex = 1;
+            this.nbaPlayoffs.Text = "Generate NBA Playoffs";
+            this.nbaPlayoffs.UseVisualStyleBackColor = true;
+            this.nbaPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
             // 
-            // newNFL
+            // nflPlayoffs
             // 
-            this.newNFL.Location = new System.Drawing.Point(430, 83);
-            this.newNFL.Name = "newNFL";
-            this.newNFL.Size = new System.Drawing.Size(149, 23);
-            this.newNFL.TabIndex = 12;
-            this.newNFL.Text = "Insert NFL Season";
-            this.newNFL.UseVisualStyleBackColor = true;
-            this.newNFL.Click += new System.EventHandler(this.newNFL_Click);
+            this.nflPlayoffs.Location = new System.Drawing.Point(6, 77);
+            this.nflPlayoffs.Name = "nflPlayoffs";
+            this.nflPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nflPlayoffs.TabIndex = 2;
+            this.nflPlayoffs.Text = "Generate NFL Playoffs";
+            this.nflPlayoffs.UseVisualStyleBackColor = true;
+            this.nflPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
             // 
-            // newNHL
+            // nhlPlayoffs
             // 
-            this.newNHL.Location = new System.Drawing.Point(430, 112);
-            this.newNHL.Name = "newNHL";
-            this.newNHL.Size = new System.Drawing.Size(149, 23);
-            this.newNHL.TabIndex = 13;
-            this.newNHL.Text = "Insert NHL Season";
-            this.newNHL.UseVisualStyleBackColor = true;
-            this.newNHL.Click += new System.EventHandler(this.newNHL_Click);
+            this.nhlPlayoffs.Location = new System.Drawing.Point(6, 106);
+            this.nhlPlayoffs.Name = "nhlPlayoffs";
+            this.nhlPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nhlPlayoffs.TabIndex = 3;
+            this.nhlPlayoffs.Text = "Generate NHL Playoffs";
+            this.nhlPlayoffs.UseVisualStyleBackColor = true;
+            this.nhlPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
             // 
             // BeatGraphForm
             // 
@@ -841,6 +901,7 @@
             this.panel1.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
+            this.RunPlayoffs.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -912,6 +973,11 @@
         private System.Windows.Forms.Button newNFL;
         private System.Windows.Forms.Button newNBA;
         private System.Windows.Forms.Button newMLB;
+        private System.Windows.Forms.GroupBox RunPlayoffs;
+        private System.Windows.Forms.Button nhlPlayoffs;
+        private System.Windows.Forms.Button nflPlayoffs;
+        private System.Windows.Forms.Button nbaPlayoffs;
+        private System.Windows.Forms.Button mlbPlayoffs;
     }
 }
 

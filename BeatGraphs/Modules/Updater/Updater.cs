@@ -511,6 +511,15 @@ namespace BeatGraphs.Modules
                         var homeMark = ParseLine(attributes[4].InnerHtml);
                         var round = int.Parse(week);
                         Logger.Log($"Recording Week {week} game {winTeam} ({winScore}) - {loseTeam} ({loseScore})", LogLevel.verbose);
+                        if (homeMark == "N" && round == 504)
+                        {
+                            //It's the Super Bowl, home team alternates every year. Odd = AFC home, Even = NFC home
+                            var team = Helpers.SelectTeam(winID, int.Parse(season), league);
+                            if (team.conference == "AFC" && int.Parse(season) % 2 == 1 || team.conference == "NFC" && int.Parse(season) % 2 == 0)
+                                homeMark = "";
+                            else
+                                homeMark = "@";
+                        }
                         if (homeMark == "@")
                         {   // Visitor wins
                             Helpers.InsertGame(seasonID, int.Parse(week), winID, winScore, loseID, loseScore);
@@ -742,11 +751,24 @@ namespace BeatGraphs.Modules
             if (!matchup.HasValue)
                 return;
 
+            // The series noted had the games go 2-3 instead of 2-2-1, meaning the "away" team for the series had
+            // the first home game. Swap the order we put them in for these specific cases to preserve home in the graph.
+            if (((seasonID == 169 || seasonID == 109 || seasonID == 105 || seasonID == 101 || seasonID == 45) && round == 502) ||
+                (seasonID <= 57 && seasonID % 4 == 57 % 4 && round == 503) || // The %4 bit makes sure it's the MLB
+                (seasonID == 23 && round == 501 && matchup.Value.Key.Item1 == 4) || // One specific matchup BUF/STL in '75 is was 1-2 instead of 1-1-1
+                (seasonID == 4 && round == 502 && matchup.Value.Key.Item1 == 148)) // One specific matchup MIL/SF in '70-71 is was 1-2-1-1-? instead of 2-2-1-1-1
+            {
+                var swapped = new Tuple<int, int>(matchup.Value.Key.Item2, matchup.Value.Key.Item1);
+                var newMatch = new KeyValuePair<Tuple<int, int>, int>(swapped, matchup.Value.Value);
+                matchup = newMatch;
+            }
+
             // Add the matchup to the database
             Helpers.InsertPlayoffs(seasonID, matchup.Value, winnerID);
 
             // Remove the current matchup from the set and try the next lower round for each team involved.
             matchups.Remove(matchup.Value.Key.Item1, matchup.Value.Key.Item2);
+
             RecordPlayoffsHelper(seasonID, matchups, matchup.Value.Key.Item1, matchup.Value.Value - 1);
             RecordPlayoffsHelper(seasonID, matchups, matchup.Value.Key.Item2, matchup.Value.Value - 1);
         }

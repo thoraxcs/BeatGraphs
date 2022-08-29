@@ -310,6 +310,37 @@ namespace BeatGraphs
         }
 
         /// <summary>
+        /// Get all teams for the league in the specified year
+        /// </summary>
+        public static List<int> GetYearsByLeague(string league)
+        {
+            var results = new List<int>();
+
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[1];
+            SqlDataReader sqlDR;
+
+            SQLDBA.Open();
+            sqlParam[0] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 50, ParameterDirection.Input, league);
+            SQLDBA.ExecuteSqlSP("Select_Years_By_League", sqlParam, out sqlDR);
+
+            if (sqlDR.HasRows)
+            {
+                while (sqlDR.Read())
+                {
+                    results.Add(int.Parse(SQLDBA.sqlGet(sqlDR, "Year")));
+                }
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return results;
+        }
+
+        /// <summary>
         /// Gets a list of leagues in the DB
         /// </summary>
         public static Dictionary<string, Dictionary<int, List<int>>> GetAllSeasons()
@@ -429,6 +460,43 @@ namespace BeatGraphs
 
             SQLDBA.Close();
             SQLDBA.Dispose();
+        }
+
+        /// <summary>
+        /// Retrieves all playoff series for a given league year
+        /// </summary>
+        /// <returns></returns>
+        public static List<Series> GetPlayoffResults(string league, int year)
+        {
+            var results = new List<Series>();
+
+            SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
+            SqlParameter[] sqlParam = new SqlParameter[2];
+            SqlDataReader sqlDR;
+
+            SQLDBA.Open();
+            sqlParam[0] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 50, ParameterDirection.Input, league);
+            sqlParam[1] = SQLDBA.CreateParameter("@Year", SqlDbType.NVarChar, 50, ParameterDirection.Input, year);
+            SQLDBA.ExecuteSqlSP("Select_Playoff_Results", sqlParam, out sqlDR);
+            // Get all teams for the league in the specified year
+
+            if (sqlDR.HasRows)
+            {
+                while (sqlDR.Read())
+                {
+                    results.Add(new Series(int.Parse(SQLDBA.sqlGet(sqlDR, "Range")),
+                        int.Parse(SQLDBA.sqlGet(sqlDR, "WinnerID")),
+                        int.Parse(SQLDBA.sqlGet(sqlDR, "HomeID")),
+                        int.Parse(SQLDBA.sqlGet(sqlDR, "AwayID"))));
+                }
+            }
+
+            SQLDBA.Close();
+            sqlDR.Close();
+            SQLDBA.Dispose();
+            sqlDR.Dispose();
+
+            return results;
         }
 
         /// <summary>

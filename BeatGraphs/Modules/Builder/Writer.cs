@@ -141,8 +141,8 @@ namespace BeatGraphs.Modules
             sbTop5.Append("\n</div>");
             sbTop5 = sbTop5.Replace("\n", Environment.NewLine);
 
+            // Write the output files, Top5 will only get uploaded from the runner to ensure only most current data is uploaded.
             Helpers.WriteFile(BasePath.file, $"/{league}/{method.ToString()[0]}/{season}/{week}.php", sbOut.ToString());
-            // TODO: Only write Top5 for the active season
             Helpers.WriteFile(BasePath.file, $"/{league}_{method.ToString()[0]}.php", sbTop5.ToString());
         }
 
@@ -448,9 +448,9 @@ namespace BeatGraphs.Modules
                 Logger.Log("Creating League Directory", LogLevel.verbose);
                 Helpers.FtpCreateDirectory(league);
                 Logger.Log("Creating Method Directory", LogLevel.verbose);
-                Helpers.FtpCreateDirectory($"{league}/{method.ToString()}");
+                Helpers.FtpCreateDirectory($"{league}/{method.ToString()[0]}");
                 Logger.Log("Creating Season Directory", LogLevel.verbose);
-                Helpers.FtpCreateDirectory($"{league}/{method.ToString()}/{season}");
+                Helpers.FtpCreateDirectory($"{league}/{method.ToString()[0]}/{season}");
             }
             catch (Exception ex)
             {

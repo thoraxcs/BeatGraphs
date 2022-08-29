@@ -253,7 +253,7 @@ namespace BeatGraphs
                 MessageBox.Show($"Please select at least one league.", "Invalid Information", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else if (buildMethods.Count == 0)
                 MessageBox.Show($"Please select at least one method.", "Invalid Information", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            else if (int.Parse(ddlFirstYear.SelectedItem.ToString()) > int.Parse(ddlLastYear.SelectedItem.ToString()))
+            else if (seasMulti.Checked && int.Parse(ddlFirstYear.SelectedItem.ToString()) > int.Parse(ddlLastYear.SelectedItem.ToString()))
                 MessageBox.Show($"First year must be prior to the last year.", "Invalid Information", MessageBoxButtons.OK, MessageBoxIcon.Error);
             else
             {
@@ -479,28 +479,15 @@ namespace BeatGraphs
             }
         }
 
-        private void newMLB_Click(object sender, EventArgs e)
+        private void NewSeason_Click(object sender, EventArgs e)
         {
-            Helpers.InsertSeason("MLB");
+            Helpers.InsertSeason(((Button)sender).Name.Substring(3, 3).ToUpper());
             LoadNewButtons();
         }
 
-        private void newNBA_Click(object sender, EventArgs e)
+        private void Playoffs_Click(object sender, EventArgs e)
         {
-            Helpers.InsertSeason("NBA");
-            LoadNewButtons();
-        }
-
-        private void newNFL_Click(object sender, EventArgs e)
-        {
-            Helpers.InsertSeason("NFL");
-            LoadNewButtons();
-        }
-
-        private void newNHL_Click(object sender, EventArgs e)
-        {
-            Helpers.InsertSeason("NHL");
-            LoadNewButtons();
+            Runner.BuildPlayoffs(((Button)sender).Name.Substring(0, 3).ToUpper());
         }
     }
 }
