@@ -93,7 +93,7 @@ namespace BeatGraphs.Modules
             sbOut.Append("</div>\n\n");
 
             sbTop5.Append("<div class='top5'>\n");
-            sbTop5.Append($@"<a href=""graphs.php?league={league}&method={method}""><div class='top5header'>{method.ToString()}<div class='toptop'> Top 5</div></div></a>");
+            sbTop5.Append($@"<a href=""graphs.php?league={league}&method={method.ToString()[0]}""><div class='top5header'>{method}<div class='toptop'> Top 5</div></div></a>");
             sbTop5.Append("\n<div class='top5row'><div class='top5subhead'>#</div><div class='top5subhead'>Team</div><div class='top5subhead'>Score</div></div>");
 
             // Write the score table for the left side of the page
