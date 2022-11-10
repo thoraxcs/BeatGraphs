@@ -96,6 +96,7 @@
     <Compile Include="Logging.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="Models\Matchups.cs" />
+    <Compile Include="Models\Request.cs" />
     <Compile Include="Models\Series.cs" />
     <Compile Include="Models\Team.cs" />
     <Compile Include="Modules\Builder\Builder.cs" />

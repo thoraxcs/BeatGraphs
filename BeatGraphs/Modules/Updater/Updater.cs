@@ -71,7 +71,7 @@ namespace BeatGraphs.Modules
                     sHTML = sHTML.Substring(sHTML.IndexOf("<h2>MLB Schedule</h2>"));
                 if (sHTML.Contains(@"<h2>Major League Schedule</h2>"))
                     sHTML = sHTML.Substring(sHTML.IndexOf("<h2>Major League Schedule</h2>"));
-
+                
                 // If "Today's Games" exists in the text, games beyond cannot be counted. Truncate past this point.
                 if (sHTML.Contains(@"<span id='today'>Today's Games</span>"))
                     sHTML = sHTML.Substring(0, sHTML.IndexOf(@"<span id='today'>Today's Games</span>"));
@@ -250,7 +250,7 @@ namespace BeatGraphs.Modules
                 // TODO: Is the lack of a playoffs page going to be a problem during the regular season?
                 try
                 {
-                    sHTMLP = Helpers.GetHtml("http://www.basketball-reference.com/playoffs/NBA_" + (int.Parse(season) + 1) + ".html", false);
+                    sHTMLP = Helpers.GetHtml("https://www.basketball-reference.com/playoffs/NBA_" + (int.Parse(season) + 1) + ".html", false);
                 }
                 catch { return; }
 
@@ -318,7 +318,7 @@ namespace BeatGraphs.Modules
                 // Get the base page for the season which will be parsed for months where games where played
                 try
                 {
-                    sHTML = Helpers.GetHtml("http://www.basketball-reference.com/leagues/NBA_" + (int.Parse(season) + 1) + "_games.html");
+                    sHTML = Helpers.GetHtml("https://www.basketball-reference.com/leagues/NBA_" + (int.Parse(season) + 1) + "_games.html");
                 }
                 catch { return; }
 
@@ -425,7 +425,7 @@ namespace BeatGraphs.Modules
                 // Get the raw HTML for the scrape
                 try
                 {
-                    sHTML = Helpers.GetHtml("http://www.pro-football-reference.com/years/" + season + "/games.htm");
+                    sHTML = Helpers.GetHtml("https://www.pro-football-reference.com/years/" + season + "/games.htm");
                 }
                 catch { return; }
 
@@ -571,7 +571,7 @@ namespace BeatGraphs.Modules
                 // Get the raw HTML for the scrape
                 try
                 {
-                    sHTML = Helpers.GetHtml("http://www.hockey-reference.com/leagues/NHL_" + (int.Parse(season) + 1) + "_games.html");
+                    sHTML = Helpers.GetHtml("https://www.hockey-reference.com/leagues/NHL_" + (int.Parse(season) + 1) + "_games.html");
                 }
                 catch { return; }
 
@@ -582,7 +582,7 @@ namespace BeatGraphs.Modules
                 foreach (var game in games)
                 {
                     var attributes = game.QuerySelectorAll("td");
-                    if (attributes.Count() == 0) //Header row will have no data cells
+                    if (attributes.Count() <= 1) //Header row will have no data cells
                         continue;
                     if (ParseLine(attributes[1].InnerHtml) == "")
                         continue; // This game hasn't been played
@@ -621,94 +621,97 @@ namespace BeatGraphs.Modules
                 }
 
                 // Playoffs
-                var playoffs = seasons[1].QuerySelectorAll("tr"); // Playoffs are contained in the second <table> games still by <tr>
-                int round, wcGames, year = int.Parse(season);
-
-                if (year == 2019) // Covid year had an extra round of playoffs.
-                    round = 500;
-                else if (year <= 1973) // From 1970/1-1973/4 there were only 3 playoff rounds
-                    round = 502;
-                else // 1974/75 season introduced fourth round of playoffs
-                    round = 501;
-
-                if (year <= 1973) // No wild card round through 1973
-                    wcGames = 0;
-                else if (year < 1979) // 4 wild card games from 74/75 to 78/79
-                    wcGames = 4;
-                else if (year == 2019) // 8 "zeroth round" games in 2019 (Covid year)
-                    wcGames = 8;
-                else // full wild card round can be treated normally
-                    wcGames = 0;
-
-                // Initialize playoff objects
-                var matchups = new Matchups(round, wcGames);
-                var covidmatchups = new Matchups(round, wcGames);
-
-                #region Covid-19 exception
-                // The 2019 Covid year also had a seeding playoff for the higher seeds. These games will all be considered
-                // on the same round level as the "zeroth round" series for the lower seeds. However, these matchups could 
-                // repeat in the knockout phase and must be handled specially.
-                if (year == 2019)
+                if (seasons.Count() > 1)
                 {
-                    covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Tampa Bay Lightning", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Washington Capitals", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Tampa Bay Lightning", league, season), Helpers.GetTeamID("Washington Capitals", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Tampa Bay Lightning", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Washington Capitals", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Colorado Avalanche", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Vegas Golden Knights", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Colorado Avalanche", league, season), Helpers.GetTeamID("Vegas Golden Knights", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Colorado Avalanche", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
-                    covidmatchups.Add(Helpers.GetTeamID("Vegas Golden Knights", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
-                }
-                #endregion
+                    var playoffs = seasons[1].QuerySelectorAll("tr"); // Playoffs are contained in the second <table> games still by <tr>
+                    int round, wcGames, year = int.Parse(season);
 
-                var lastWin = -1;
-                foreach (var game in playoffs)
-                {
-                    var attributes = game.QuerySelectorAll("td");
-                    if (attributes.Count() == 0) //Header row will have no data cells
-                        continue;
-                    if (ParseLine(attributes[1].InnerHtml) == "")
-                        continue; // This game hasn't been played
-
-                    // Parse team and score data
-                    var awayTeam = attributes[0].QuerySelector("a").InnerHtml;
-                    var homeTeam = attributes[2].QuerySelector("a").InnerHtml;
-                    var awayScore = int.Parse(attributes[1].InnerHtml);
-                    var homeScore = int.Parse(attributes[3].InnerHtml);
-                    var awayID = Helpers.GetTeamID(awayTeam, league, season);
-                    var homeID = Helpers.GetTeamID(homeTeam, league, season);
-
-                    // There's a problem if the teams couldn't be identified
-                    if (awayID == -1 || homeID == -1)
-                    {
-                        Logger.Log($"Could not identify teams in playoff game for ({awayTeam}) vs ({homeTeam}).", LogLevel.error);
-                        return;
-                    }
-
-                    if (covidmatchups.Contains(awayID, homeID))
-                    {
-                        // Round Robin matchups are automatically "zeroth round". Do not add to matchup table. Remove from exception group
-                        // so that if it comes up again it will be treated as a new matchup.
+                    if (year == 2019) // Covid year had an extra round of playoffs.
                         round = 500;
-                        covidmatchups.Remove(awayID, homeID);
-                    }
-                    else
+                    else if (year <= 1973) // From 1970/1-1973/4 there were only 3 playoff rounds
+                        round = 502;
+                    else // 1974/75 season introduced fourth round of playoffs
+                        round = 501;
+
+                    if (year <= 1973) // No wild card round through 1973
+                        wcGames = 0;
+                    else if (year < 1979) // 4 wild card games from 74/75 to 78/79
+                        wcGames = 4;
+                    else if (year == 2019) // 8 "zeroth round" games in 2019 (Covid year)
+                        wcGames = 8;
+                    else // full wild card round can be treated normally
+                        wcGames = 0;
+
+                    // Initialize playoff objects
+                    var matchups = new Matchups(round, wcGames);
+                    var covidmatchups = new Matchups(round, wcGames);
+
+                    #region Covid-19 exception
+                    // The 2019 Covid year also had a seeding playoff for the higher seeds. These games will all be considered
+                    // on the same round level as the "zeroth round" series for the lower seeds. However, these matchups could 
+                    // repeat in the knockout phase and must be handled specially.
+                    if (year == 2019)
                     {
-                        // Add the matchup to the playoff tracker if necessary and get the resulting playoff round
-                        matchups.Add(awayID, homeID);
-                        round = matchups.GetRound(awayID, homeID);
+                        covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Tampa Bay Lightning", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Washington Capitals", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Boston Bruins", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Tampa Bay Lightning", league, season), Helpers.GetTeamID("Washington Capitals", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Tampa Bay Lightning", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Washington Capitals", league, season), Helpers.GetTeamID("Philadelphia Flyers", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Colorado Avalanche", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Vegas Golden Knights", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("St. Louis Blues", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Colorado Avalanche", league, season), Helpers.GetTeamID("Vegas Golden Knights", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Colorado Avalanche", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
+                        covidmatchups.Add(Helpers.GetTeamID("Vegas Golden Knights", league, season), Helpers.GetTeamID("Dallas Stars", league, season), round);
+                    }
+                    #endregion
+
+                    var lastWin = -1;
+                    foreach (var game in playoffs)
+                    {
+                        var attributes = game.QuerySelectorAll("td");
+                        if (attributes.Count() == 0) //Header row will have no data cells
+                            continue;
+                        if (ParseLine(attributes[1].InnerHtml) == "")
+                            continue; // This game hasn't been played
+
+                        // Parse team and score data
+                        var awayTeam = attributes[0].QuerySelector("a").InnerHtml;
+                        var homeTeam = attributes[2].QuerySelector("a").InnerHtml;
+                        var awayScore = int.Parse(attributes[1].InnerHtml);
+                        var homeScore = int.Parse(attributes[3].InnerHtml);
+                        var awayID = Helpers.GetTeamID(awayTeam, league, season);
+                        var homeID = Helpers.GetTeamID(homeTeam, league, season);
+
+                        // There's a problem if the teams couldn't be identified
+                        if (awayID == -1 || homeID == -1)
+                        {
+                            Logger.Log($"Could not identify teams in playoff game for ({awayTeam}) vs ({homeTeam}).", LogLevel.error);
+                            return;
+                        }
+
+                        if (covidmatchups.Contains(awayID, homeID))
+                        {
+                            // Round Robin matchups are automatically "zeroth round". Do not add to matchup table. Remove from exception group
+                            // so that if it comes up again it will be treated as a new matchup.
+                            round = 500;
+                            covidmatchups.Remove(awayID, homeID);
+                        }
+                        else
+                        {
+                            // Add the matchup to the playoff tracker if necessary and get the resulting playoff round
+                            matchups.Add(awayID, homeID);
+                            round = matchups.GetRound(awayID, homeID);
+                        }
+
+                        Helpers.InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
+                        lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
                     }
 
-                    Helpers.InsertGame(seasonID, round, awayID, awayScore, homeID, homeScore);
-                    lastWin = awayScore > homeScore ? awayID : homeID; // Track which franchise has the last win of the season, CHAMPIONS!
+                    // Send to the database a recap of the playoff matchups.
+                    RecordPlayoffs(seasonID, matchups, lastWin);
                 }
-
-                // Send to the database a recap of the playoff matchups.
-                RecordPlayoffs(seasonID, matchups, lastWin);
                 Logger.Log($"{league} {season} has been updated successfully.");
             }
             catch (Exception ex)

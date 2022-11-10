@@ -61,6 +61,11 @@
             this.seasSingle = new System.Windows.Forms.RadioButton();
             this.moduleSelect = new System.Windows.Forms.TabControl();
             this.tabUpdater = new System.Windows.Forms.TabPage();
+            this.RunPlayoffs = new System.Windows.Forms.GroupBox();
+            this.nhlPlayoffs = new System.Windows.Forms.Button();
+            this.nflPlayoffs = new System.Windows.Forms.Button();
+            this.nbaPlayoffs = new System.Windows.Forms.Button();
+            this.mlbPlayoffs = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.mlbBox = new System.Windows.Forms.CheckBox();
             this.nbaBox = new System.Windows.Forms.CheckBox();
@@ -95,11 +100,7 @@
             this.runNHL = new System.Windows.Forms.CheckBox();
             this.systemTray = new System.Windows.Forms.NotifyIcon(this.components);
             this.clockTimer = new System.Windows.Forms.Timer(this.components);
-            this.RunPlayoffs = new System.Windows.Forms.GroupBox();
-            this.mlbPlayoffs = new System.Windows.Forms.Button();
-            this.nbaPlayoffs = new System.Windows.Forms.Button();
-            this.nflPlayoffs = new System.Windows.Forms.Button();
-            this.nhlPlayoffs = new System.Windows.Forms.Button();
+            this.loadBar = new System.Windows.Forms.ProgressBar();
             this.menuStrip.SuspendLayout();
             this.tabBuilder.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -108,11 +109,11 @@
             this.groupBox1.SuspendLayout();
             this.moduleSelect.SuspendLayout();
             this.tabUpdater.SuspendLayout();
+            this.RunPlayoffs.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox6.SuspendLayout();
-            this.RunPlayoffs.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbOutput
@@ -121,7 +122,7 @@
             this.tbOutput.ForeColor = System.Drawing.SystemColors.ControlLight;
             this.tbOutput.Location = new System.Drawing.Point(12, 218);
             this.tbOutput.Name = "tbOutput";
-            this.tbOutput.Size = new System.Drawing.Size(602, 261);
+            this.tbOutput.Size = new System.Drawing.Size(602, 232);
             this.tbOutput.TabIndex = 1;
             this.tbOutput.Text = "";
             // 
@@ -455,6 +456,59 @@
             this.tabUpdater.TabIndex = 0;
             this.tabUpdater.Text = "Update Scores";
             this.tabUpdater.UseVisualStyleBackColor = true;
+            // 
+            // RunPlayoffs
+            // 
+            this.RunPlayoffs.Controls.Add(this.nhlPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.nflPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.nbaPlayoffs);
+            this.RunPlayoffs.Controls.Add(this.mlbPlayoffs);
+            this.RunPlayoffs.Location = new System.Drawing.Point(390, 6);
+            this.RunPlayoffs.Name = "RunPlayoffs";
+            this.RunPlayoffs.Size = new System.Drawing.Size(196, 144);
+            this.RunPlayoffs.TabIndex = 8;
+            this.RunPlayoffs.TabStop = false;
+            this.RunPlayoffs.Text = "Run Playoffs";
+            // 
+            // nhlPlayoffs
+            // 
+            this.nhlPlayoffs.Location = new System.Drawing.Point(6, 106);
+            this.nhlPlayoffs.Name = "nhlPlayoffs";
+            this.nhlPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nhlPlayoffs.TabIndex = 3;
+            this.nhlPlayoffs.Text = "Generate NHL Playoffs";
+            this.nhlPlayoffs.UseVisualStyleBackColor = true;
+            this.nhlPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
+            // 
+            // nflPlayoffs
+            // 
+            this.nflPlayoffs.Location = new System.Drawing.Point(6, 77);
+            this.nflPlayoffs.Name = "nflPlayoffs";
+            this.nflPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nflPlayoffs.TabIndex = 2;
+            this.nflPlayoffs.Text = "Generate NFL Playoffs";
+            this.nflPlayoffs.UseVisualStyleBackColor = true;
+            this.nflPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
+            // 
+            // nbaPlayoffs
+            // 
+            this.nbaPlayoffs.Location = new System.Drawing.Point(6, 48);
+            this.nbaPlayoffs.Name = "nbaPlayoffs";
+            this.nbaPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.nbaPlayoffs.TabIndex = 1;
+            this.nbaPlayoffs.Text = "Generate NBA Playoffs";
+            this.nbaPlayoffs.UseVisualStyleBackColor = true;
+            this.nbaPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
+            // 
+            // mlbPlayoffs
+            // 
+            this.mlbPlayoffs.Location = new System.Drawing.Point(6, 19);
+            this.mlbPlayoffs.Name = "mlbPlayoffs";
+            this.mlbPlayoffs.Size = new System.Drawing.Size(184, 23);
+            this.mlbPlayoffs.TabIndex = 0;
+            this.mlbPlayoffs.Text = "Generate MLB Playoffs";
+            this.mlbPlayoffs.UseVisualStyleBackColor = true;
+            this.mlbPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
             // 
             // groupBox5
             // 
@@ -812,64 +866,20 @@
             // 
             this.clockTimer.Tick += new System.EventHandler(this.clockTimer_Tick);
             // 
-            // RunPlayoffs
+            // loadBar
             // 
-            this.RunPlayoffs.Controls.Add(this.nhlPlayoffs);
-            this.RunPlayoffs.Controls.Add(this.nflPlayoffs);
-            this.RunPlayoffs.Controls.Add(this.nbaPlayoffs);
-            this.RunPlayoffs.Controls.Add(this.mlbPlayoffs);
-            this.RunPlayoffs.Location = new System.Drawing.Point(390, 6);
-            this.RunPlayoffs.Name = "RunPlayoffs";
-            this.RunPlayoffs.Size = new System.Drawing.Size(196, 144);
-            this.RunPlayoffs.TabIndex = 8;
-            this.RunPlayoffs.TabStop = false;
-            this.RunPlayoffs.Text = "Run Playoffs";
-            // 
-            // mlbPlayoffs
-            // 
-            this.mlbPlayoffs.Location = new System.Drawing.Point(6, 19);
-            this.mlbPlayoffs.Name = "mlbPlayoffs";
-            this.mlbPlayoffs.Size = new System.Drawing.Size(184, 23);
-            this.mlbPlayoffs.TabIndex = 0;
-            this.mlbPlayoffs.Text = "Generate MLB Playoffs";
-            this.mlbPlayoffs.UseVisualStyleBackColor = true;
-            this.mlbPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
-            // 
-            // nbaPlayoffs
-            // 
-            this.nbaPlayoffs.Location = new System.Drawing.Point(6, 48);
-            this.nbaPlayoffs.Name = "nbaPlayoffs";
-            this.nbaPlayoffs.Size = new System.Drawing.Size(184, 23);
-            this.nbaPlayoffs.TabIndex = 1;
-            this.nbaPlayoffs.Text = "Generate NBA Playoffs";
-            this.nbaPlayoffs.UseVisualStyleBackColor = true;
-            this.nbaPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
-            // 
-            // nflPlayoffs
-            // 
-            this.nflPlayoffs.Location = new System.Drawing.Point(6, 77);
-            this.nflPlayoffs.Name = "nflPlayoffs";
-            this.nflPlayoffs.Size = new System.Drawing.Size(184, 23);
-            this.nflPlayoffs.TabIndex = 2;
-            this.nflPlayoffs.Text = "Generate NFL Playoffs";
-            this.nflPlayoffs.UseVisualStyleBackColor = true;
-            this.nflPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
-            // 
-            // nhlPlayoffs
-            // 
-            this.nhlPlayoffs.Location = new System.Drawing.Point(6, 106);
-            this.nhlPlayoffs.Name = "nhlPlayoffs";
-            this.nhlPlayoffs.Size = new System.Drawing.Size(184, 23);
-            this.nhlPlayoffs.TabIndex = 3;
-            this.nhlPlayoffs.Text = "Generate NHL Playoffs";
-            this.nhlPlayoffs.UseVisualStyleBackColor = true;
-            this.nhlPlayoffs.Click += new System.EventHandler(this.Playoffs_Click);
+            this.loadBar.Location = new System.Drawing.Point(12, 456);
+            this.loadBar.Maximum = 30;
+            this.loadBar.Name = "loadBar";
+            this.loadBar.Size = new System.Drawing.Size(600, 23);
+            this.loadBar.TabIndex = 3;
             // 
             // BeatGraphForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(626, 491);
+            this.Controls.Add(this.loadBar);
             this.Controls.Add(this.tbOutput);
             this.Controls.Add(this.moduleSelect);
             this.Controls.Add(this.menuStrip);
@@ -895,13 +905,13 @@
             this.moduleSelect.ResumeLayout(false);
             this.tabUpdater.ResumeLayout(false);
             this.tabUpdater.PerformLayout();
+            this.RunPlayoffs.ResumeLayout(false);
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.tabPage1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
-            this.RunPlayoffs.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -978,6 +988,7 @@
         private System.Windows.Forms.Button nflPlayoffs;
         private System.Windows.Forms.Button nbaPlayoffs;
         private System.Windows.Forms.Button mlbPlayoffs;
+        private System.Windows.Forms.ProgressBar loadBar;
     }
 }
 

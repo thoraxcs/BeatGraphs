@@ -26,6 +26,7 @@ namespace BeatGraphs
             PopulateYears();
             Options.LoadSettings();
             Logger.Initialize(this);
+            Helpers.Initialize(loadBar);
             clockTimer.Start();
 
             var lastRun = Options.settings.lastRun;

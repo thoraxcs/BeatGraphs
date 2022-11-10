@@ -77,7 +77,7 @@ namespace BeatGraphs.Modules
         /// </summary>
         private static void BuildFooter()
         {
-            var regex = new Regex(@"[aA-zZ]{3} \d{2}, \d{4} at \d+:\d{2} \wM");
+            var regex = new Regex(@"[aA-zZ]{3} \d{1,2}, \d{4} at \d+:\d{2} \wM");
             var footer = Helpers.ReadFile(BasePath.file, "/footer.php");
             footer = regex.Replace(footer, DateTime.Now.ToString("MMM d, yyyy 'at' h:mm tt"));//  footer.Replace("[[UPLOADDATE]]", DateTime.Now.ToString("MMM d, yyyy 'at' h:mm tt"));
             Helpers.WriteFile(BasePath.file, "/footer.php", footer);

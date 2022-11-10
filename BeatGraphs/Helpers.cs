@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Windows.Forms;
 using Options = BeatGraphs.SettingsRecord.Settings;
 
 namespace BeatGraphs
@@ -15,6 +16,8 @@ namespace BeatGraphs
     /// </summary>
     public static class Helpers
     {
+        private static ProgressBar bar;
+        private static DateTime lastRun = DateTime.Now.AddSeconds(-29);
         private static readonly string ftpPath = ConfigurationManager.AppSettings.Get("ftpPath");
         private static readonly string ftpUser = ConfigurationManager.AppSettings.Get("ftpUser");
         private static readonly string ftpPass = ConfigurationManager.AppSettings.Get("ftpPass");
@@ -22,6 +25,10 @@ namespace BeatGraphs
         private static readonly string filePath = ConfigurationManager.AppSettings.Get("filePath");
         private static readonly string settingsPath = Process.GetCurrentProcess().MainModule.FileName.Substring(0, Process.GetCurrentProcess().MainModule.FileName.LastIndexOf(@"\"));
 
+        public static void Initialize(ProgressBar b)
+        {
+            bar = b;
+        }
 
         #region File
         public static void InitializeDirectory(string league, string method, string season)
@@ -114,7 +121,7 @@ namespace BeatGraphs
         {
             SQLDatabaseAccess SQLDBA = new SQLDatabaseAccess();
             SqlParameter[] sqlParam = new SqlParameter[1];
-
+            
             sqlParam[0] = SQLDBA.CreateParameter("@SeasonID", SqlDbType.Int, 64, ParameterDirection.Input, seasonID);
 
             SQLDBA.Open();
@@ -176,7 +183,7 @@ namespace BeatGraphs
             SqlParameter[] sqlParam = new SqlParameter[2];
             SqlDataReader sqlDR;
             int iSeasonID;
-
+            
             sqlParam[0] = SQLDBA.CreateParameter("@Year", SqlDbType.Int, 64, ParameterDirection.Input, year);
             sqlParam[1] = SQLDBA.CreateParameter("@League", SqlDbType.NVarChar, 50, ParameterDirection.Input, league);
 
@@ -657,6 +664,12 @@ namespace BeatGraphs
         public static string GetHtml(string url, bool errorThrow = true)
         {
             string html = "";
+            while (lastRun.AddSeconds(30) >= DateTime.Now)
+            {
+                bar.Value = 30 - (int)(lastRun.AddSeconds(30) - DateTime.Now).TotalSeconds;
+            } // Forces 30 second delay between requests
+            bar.Value = 0;
+            lastRun = DateTime.Now;
 
             try
             {
@@ -669,7 +682,7 @@ namespace BeatGraphs
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 if (errorThrow)
                 {
@@ -678,7 +691,7 @@ namespace BeatGraphs
                 }
                 else
                 {
-                    Logger.Log($"Requested page could not be accessed and may not yet exist: {url}", LogLevel.warning);
+                    Logger.Log($"Requested page could not be accessed and may not yet exist: {url} ({ex.Message})", LogLevel.warning);
                 }
             }
             return html;
