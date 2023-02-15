@@ -236,8 +236,6 @@ namespace BeatGraphs.Modules
         {
             try
             {
-                Logger.Log($"Updating scores for the {season} {league} season.");
-
                 string sHTML = "", sHTMLP = "";
                 int seasonStart = -1;
 
@@ -318,6 +316,7 @@ namespace BeatGraphs.Modules
                 // Get the base page for the season which will be parsed for months where games where played
                 try
                 {
+                    Logger.Log($"Updating scores for the {season} {league} season. (Playoffs)");
                     sHTML = Helpers.GetHtml("https://www.basketball-reference.com/leagues/NBA_" + (int.Parse(season) + 1) + "_games.html");
                 }
                 catch { return; }
@@ -329,6 +328,7 @@ namespace BeatGraphs.Modules
                 foreach (Match match in matches)
                 {
                     var month = match.Groups[1].Value;
+                    Logger.Log($"Updating scores for the {season} {league} season. ({month.Capitalize()})");
                     var url = $@"https://www.basketball-reference.com/leagues/NBA_{(int.Parse(season) + 1)}_games-{month}.html";
 
                     // Get the raw HTML for the scrape
@@ -776,8 +776,20 @@ namespace BeatGraphs.Modules
             RecordPlayoffsHelper(seasonID, matchups, matchup.Value.Key.Item2, matchup.Value.Value - 1);
         }
 
+        /// <summary>
+        /// Capitalizes the first character of a string.
+        /// </summary>
+        public static string Capitalize(this string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
 
-
+            char[] letters = input.ToCharArray();
+            letters[0] = char.ToUpper(letters[0]);
+            return new string(letters);
+        }
 
         /// <summary>
         /// Removes ancillary text from a data entry to get to the wanted information.
